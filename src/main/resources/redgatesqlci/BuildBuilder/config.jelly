@@ -91,7 +91,7 @@
             </f:block>
 
 
-            <f:optionalBlock field="dlmDashboard" checked="${instance.dlmDashboard == null}" title="Send schema information to DLM Dashboard">
+            <f:optionalBlock field="dlmDashboard" checked="${instance.sendToDlmDashboard}" title="Send schema information to DLM Dashboard">
 
                 <f:entry title="DLM Dashboard host:" field="dlmDashboardHost">
                     <f:textbox/>
