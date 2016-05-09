@@ -5,6 +5,8 @@ import hudson.Launcher;
 import hudson.Proc;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
+import hudson.remoting.Callable;
+import hudson.remoting.VirtualChannel;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -12,27 +14,62 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.jenkinsci.remoting.RoleChecker;
+
 public class Utils {
+    private static String GetEnvironmentVariable(final String variableName, VirtualChannel channel)
+    {
+        try {
+            return channel.call(new Callable<String,RuntimeException>(){
+                public String call() {
+                    return System.getenv(variableName);
+                }
+    
+                @Override
+                public void checkRoles(RoleChecker checker) throws SecurityException {}
+            });
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static boolean CIExists(final String possibleLocation, VirtualChannel channel) {
+        try {
+            return channel.call(new Callable<Boolean,RuntimeException>(){
+                public Boolean call() {
+                    return new File(possibleLocation).isFile();
+                }
+
+                @Override
+                public void checkRoles(RoleChecker checker) throws SecurityException {}
+            });
+        } catch (Exception e) {
+            return false;
+        }        
+    }
+    
     public static boolean runSQLCIWithParams(AbstractBuild build, Launcher launcher, BuildListener listener, Collection<String> params)
     {
+        VirtualChannel channel = launcher.getChannel();
+        
         // Check SQL CI is installed and get location.
-
         String sqlCiLocation = "";
         String allLocations = "";
-        String[] possibleSqlCiLocations =
-               {
-                       System.getenv("DLMAS_HOME") +  "sqlCI\\sqlci.exe",
-                       System.getenv("ProgramFiles") + "\\Red Gate\\DLM Automation Suite 1\\sqlCI\\sqlci.exe",
-                       System.getenv("ProgramFiles") + "\\Red Gate\\SQL Automation Pack 1\\sqlCI\\sqlci.exe",
-                       System.getenv("ProgramFiles") + "\\Red Gate\\sqlCI\\sqlci.exe",
-                       System.getenv("ProgramFiles(X86)") + "\\Red Gate\\DLM Automation Suite 1\\sqlCI\\sqlci.exe",
-                       System.getenv("ProgramFiles(X86)") +  "\\Red Gate\\SQL Automation Pack 1\\sqlCI\\sqlci.exe",
-                       System.getenv("ProgramFiles(X86)") +  "\\Red Gate\\sqlCI\\sqlci.exe"
-               } ;
+        String[] possibleSqlCiLocations = 
+            {
+                GetEnvironmentVariable("DLMAS_HOME", channel) +  "sqlCI\\sqlci.exe",
+                GetEnvironmentVariable("ProgramFiles", channel) + "\\Red Gate\\DLM Automation Suite 1\\sqlCI\\sqlci.exe",
+                GetEnvironmentVariable("ProgramFiles", channel) + "\\Red Gate\\SQL Automation Pack 1\\sqlCI\\sqlci.exe",
+                GetEnvironmentVariable("ProgramFiles", channel) + "\\Red Gate\\sqlCI\\sqlci.exe",
+                GetEnvironmentVariable("ProgramFiles(X86)", channel) + "\\Red Gate\\DLM Automation Suite 1\\sqlCI\\sqlci.exe",
+                GetEnvironmentVariable("ProgramFiles(X86)", channel) +  "\\Red Gate\\SQL Automation Pack 1\\sqlCI\\sqlci.exe",
+                GetEnvironmentVariable("ProgramFiles(X86)", channel) +  "\\Red Gate\\sqlCI\\sqlci.exe"
+            };
+        
 
         for(String possibleLocation : possibleSqlCiLocations)
         {
-            if(new File(possibleLocation).isFile()) {
+            if(CIExists(possibleLocation, channel)) {
                 sqlCiLocation = possibleLocation;
                 break;
             }
