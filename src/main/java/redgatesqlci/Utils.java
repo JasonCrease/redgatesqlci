@@ -5,7 +5,6 @@ import hudson.Launcher;
 import hudson.Proc;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
-import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 
 import java.io.*;
@@ -14,40 +13,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.jenkinsci.remoting.RoleChecker;
+import jenkins.security.MasterToSlaveCallable;
 
-public class Utils {
-    private static String GetEnvironmentVariable(final String variableName, VirtualChannel channel)
-    {
-        try {
-            return channel.call(new Callable<String,RuntimeException>(){
-                public String call() {
-                    return System.getenv(variableName);
-                }
-    
-                @Override
-                public void checkRoles(RoleChecker checker) throws SecurityException {}
-            });
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private static boolean CIExists(final String possibleLocation, VirtualChannel channel) {
-        try {
-            return channel.call(new Callable<Boolean,RuntimeException>(){
-                public Boolean call() {
-                    return new File(possibleLocation).isFile();
-                }
-
-                @Override
-                public void checkRoles(RoleChecker checker) throws SecurityException {}
-            });
-        } catch (Exception e) {
-            return false;
-        }        
-    }
-    
+public class Utils {    
     public static boolean runSQLCIWithParams(AbstractBuild build, Launcher launcher, BuildListener listener, Collection<String> params)
     {
         VirtualChannel channel = launcher.getChannel();
@@ -57,19 +25,19 @@ public class Utils {
         String allLocations = "";
         String[] possibleSqlCiLocations = 
             {
-                GetEnvironmentVariable("DLMAS_HOME", channel) +  "sqlCI\\sqlci.exe",
-                GetEnvironmentVariable("ProgramFiles", channel) + "\\Red Gate\\DLM Automation Suite 1\\sqlCI\\sqlci.exe",
-                GetEnvironmentVariable("ProgramFiles", channel) + "\\Red Gate\\SQL Automation Pack 1\\sqlCI\\sqlci.exe",
-                GetEnvironmentVariable("ProgramFiles", channel) + "\\Red Gate\\sqlCI\\sqlci.exe",
-                GetEnvironmentVariable("ProgramFiles(X86)", channel) + "\\Red Gate\\DLM Automation Suite 1\\sqlCI\\sqlci.exe",
-                GetEnvironmentVariable("ProgramFiles(X86)", channel) +  "\\Red Gate\\SQL Automation Pack 1\\sqlCI\\sqlci.exe",
-                GetEnvironmentVariable("ProgramFiles(X86)", channel) +  "\\Red Gate\\sqlCI\\sqlci.exe"
+                getEnvironmentVariable("DLMAS_HOME", channel) +  "sqlCI\\sqlci.exe",
+                getEnvironmentVariable("ProgramFiles", channel) + "\\Red Gate\\DLM Automation Suite 1\\sqlCI\\sqlci.exe",
+                getEnvironmentVariable("ProgramFiles", channel) + "\\Red Gate\\SQL Automation Pack 1\\sqlCI\\sqlci.exe",
+                getEnvironmentVariable("ProgramFiles", channel) + "\\Red Gate\\sqlCI\\sqlci.exe",
+                getEnvironmentVariable("ProgramFiles(X86)", channel) + "\\Red Gate\\DLM Automation Suite 1\\sqlCI\\sqlci.exe",
+                getEnvironmentVariable("ProgramFiles(X86)", channel) +  "\\Red Gate\\SQL Automation Pack 1\\sqlCI\\sqlci.exe",
+                getEnvironmentVariable("ProgramFiles(X86)", channel) +  "\\Red Gate\\sqlCI\\sqlci.exe"
             };
         
 
         for(String possibleLocation : possibleSqlCiLocations)
         {
-            if(CIExists(possibleLocation, channel)) {
+            if(ciExists(possibleLocation, channel)) {
                 sqlCiLocation = possibleLocation;
                 break;
             }
@@ -150,4 +118,28 @@ public class Utils {
         return packageName + "." + buildNumber + ".nupkg";
     }
 
+    private static String getEnvironmentVariable(final String variableName, VirtualChannel channel)
+    {
+        try {
+            return channel.call(new MasterToSlaveCallable<String,RuntimeException>(){
+                public String call() {
+                    return System.getenv(variableName);
+                }
+            });
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static boolean ciExists(final String possibleLocation, VirtualChannel channel) {
+        try {
+            return channel.call(new MasterToSlaveCallable<Boolean,RuntimeException>(){
+                public Boolean call() {
+                    return new File(possibleLocation).isFile();
+                }
+            });
+        } catch (Exception e) {
+            return false;
+        }        
+    }
 }
