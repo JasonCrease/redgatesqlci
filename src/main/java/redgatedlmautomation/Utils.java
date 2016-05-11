@@ -94,6 +94,7 @@ public class Utils {
         }
         catch (java.io.IOException e) {}
         catch (java.lang.InterruptedException e) {}
+        vars.put("REDGATE_FUR_ENVIRONMENT", "Jenkins Plugin");
         procStarter.envs(vars);
 
         procStarter.cmdAsSingleString(longString).stdout(listener.getLogger()).stderr(listener.getLogger()).pwd(build.getWorkspace());
