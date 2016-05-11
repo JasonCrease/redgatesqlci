@@ -1,4 +1,4 @@
-package redgatedlmautomation;
+package redgatesqlci;
 
 import hudson.EnvVars;
 import hudson.Launcher;

@@ -1,4 +1,4 @@
-package redgatedlmautomation;
+package redgatesqlci;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 

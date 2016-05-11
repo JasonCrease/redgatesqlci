@@ -1,4 +1,4 @@
-package redgatedlmautomation;
+package redgatesqlci;
 
 import hudson.Extension;
 import hudson.FilePath;
@@ -17,15 +17,29 @@ import org.kohsuke.stapler.StaplerRequest;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.concurrent.ExecutionException;
+import java.util.Map;
 
-public class TestBuilder extends Builder {
+public class BuildBuilder extends Builder {
+
+    private String dbFolder;
+    public String getDbFolder() {
+        return dbFolder;
+    }
+
+    private String subfolder;
+    public String getSubfolder() {
+        return subfolder;
+    }
 
     private final String packageid;
-    public String getPackageid() { return packageid; }
+    public String getPackageid() {
+        return packageid;
+    }
 
     private final String tempServer;
-    public String getTempServer() { return tempServer;  }
+    public String getTempServer() {
+        return tempServer;
+    }
 
     private final String serverName;
     public String getServerName() {
@@ -57,35 +71,35 @@ public class TestBuilder extends Builder {
         return additionalParams;
     }
 
-    private final String runOnlyParams;
-    public String getRunOnlyParams() {
-        return runOnlyParams;
-    }
-
-    private final String runTestSet;
-    public String getRunTestSet() {
-        return runTestSet;
-    }
-
-    private final String generateTestData;
-    public String getGenerateTestData() { return generateTestData; }
-
-    private final String sqlgenPath;
-    public String getSqlgenPath() { return sqlgenPath; }
-
     private final String packageVersion;
-    public String getPackageVersion() { return packageVersion;  }
+    public String getPackageVersion() {
+        return packageVersion;
+    }
+
+    private final boolean sendToDlmDashboard;
+    public boolean getSendToDlmDashboard() {
+        return sendToDlmDashboard;
+    }
+
+    private final String dlmDashboardHost;
+    public String getDlmDashboardHost() {
+        return dlmDashboardHost;
+    }
+
+    private final String dlmDashboardPort;
+    public String getDlmDashboardPort() {
+        return dlmDashboardPort;
+    }
+
 
     @DataBoundConstructor
-    public TestBuilder(String packageid, Server tempServer, RunTestSet runTestSet, GenerateTestData generateTestData, String additionalParams, String packageVersion) {
-
+    public BuildBuilder(DbFolder dbFolder, String packageid, Server tempServer, String additionalParams, String packageVersion, DlmDashboard dlmDashboard) {
+        this.dbFolder = dbFolder.getvalue();
+        this.subfolder = dbFolder.getsubfolder();
         this.packageid = packageid;
         this.tempServer = tempServer.getvalue();
-        this.runTestSet = runTestSet.getvalue();
-        this.generateTestData = generateTestData == null ? null : "true";
 
-        if(this.tempServer.equals("sqlServer"))
-        {
+        if(this.tempServer.equals("sqlServer")) {
             this.dbName = tempServer.getDbName();
             this.serverName = tempServer.getServerName();
             this.serverAuth = tempServer.getServerAuth().getvalue();
@@ -101,32 +115,42 @@ public class TestBuilder extends Builder {
             this.password = "";
         }
 
-        if(this.runTestSet.equals("runOnlyTest"))
-            this.runOnlyParams = runTestSet.getRunOnlyParams();
-        else
-            this.runOnlyParams = "";
-
-        if(this.generateTestData != null)
-            this.sqlgenPath = generateTestData.getSqlgenPath();
-        else
-            this.sqlgenPath = "";
-
         this.additionalParams = additionalParams;
         this.packageVersion = packageVersion;
+
+        this.sendToDlmDashboard = dlmDashboard != null;
+        if(getSendToDlmDashboard()) {
+            this.dlmDashboardHost = dlmDashboard.getDlmDashboardHost();
+            this.dlmDashboardPort = dlmDashboard.getDlmDashboardPort();
+        }
+        else
+        {
+            this.dlmDashboardHost = null;
+            this.dlmDashboardPort = null;
+        }
     }
 
     @Override
     public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
         ArrayList<String> params = new ArrayList<String>();
 
-        String buildNumber = "1.0." + Integer.toString(build.getNumber());
-        if(getPackageVersion() != null && !getPackageVersion().isEmpty())
-            buildNumber = getPackageVersion();
+        FilePath checkOutPath = build.getWorkspace();
+        params.add("BUILD");
 
-        String packageFileName = Utils.constructPackageFileName(getPackageid(), buildNumber);
+        if (getDbFolder().equals("subfolder")) {
+            params.add("/scriptsFolder=" + checkOutPath.getRemote()  + getSubfolder());
+        } else{
+            params.add("/scriptsFolder=" + checkOutPath.getRemote());
+        }
+        params.add("/packageId=" + getPackageid());
 
-        params.add("TEST");
-        params.add("/package=" + packageFileName);
+        if(getPackageVersion() == null || getPackageVersion().isEmpty())
+            params.add("/packageVersion=1.0." + build.getNumber());
+        else
+            params.add("/packageVersion=" + getPackageVersion());
+
+        if (!additionalParams.isEmpty())
+            params.add("/additionalCompareArgs=" + getAdditionalParams());
 
         if (getTempServer().equals("sqlServer")) {
             params.add("/temporaryDatabaseServer=" + getServerName());
@@ -138,15 +162,10 @@ public class TestBuilder extends Builder {
             }
         }
 
-        if (getRunTestSet().equals("runOnlyTest")) {
-            params.add("/runOnly=" + getRunOnlyParams());
+        if (getSendToDlmDashboard()) {
+            params.add("/dlmDashboardHost=" + getDlmDashboardHost());
+            params.add("/dlmDashboardPort=" + getDlmDashboardPort());
         }
-        if (getGenerateTestData() != null) {
-            params.add("/sqlDataGenerator=" + getSqlgenPath());
-        }
-
-        if (!getAdditionalParams().isEmpty())
-            params.add("/additionalCompareArgs=" + getAdditionalParams());
 
         return Utils.runSQLCIWithParams(build, launcher, listener, params);
     }
@@ -167,21 +186,24 @@ public class TestBuilder extends Builder {
     @Extension // This indicates to Jenkins that this is an implementation of an extension point.
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
         /**
-         * In order to load the persisted global configuration, you have to
+         * In order to load the persisted global configuration, you have to 
          * call load() in the constructor.
          */
         public DescriptorImpl() {
             load();
         }
 
-        public FormValidation doCheckPackageid(@QueryParameter String packageid) throws IOException, ServletException {
-            if (packageid.length() == 0)
-                return FormValidation.error("Enter a package ID");
+        public FormValidation doCheckPackageid(@QueryParameter String value) throws IOException, ServletException {
+            if (value.length() == 0)
+                return FormValidation.error("Enter a package ID.");
             return FormValidation.ok();
         }
 
+        // Since the AJAX callbacks don't give the value of radioblocks, I can't validate the value of the server and
+        // database name fields.
+
         public boolean isApplicable(Class<? extends AbstractProject> aClass) {
-            // Indicates that this builder can be used with all kinds of project types
+            // Indicates that this builder can be used with all kinds of project types 
             return true;
         }
 
@@ -189,7 +211,7 @@ public class TestBuilder extends Builder {
          * This human readable name is used in the configuration screen.
          */
         public String getDisplayName() {
-            return "Redgate DLM Automation: Test a database package";
+            return "Redgate DLM Automation: Build a database package";
         }
 
         @Override
