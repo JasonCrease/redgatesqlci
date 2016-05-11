@@ -1,6 +1,7 @@
-package redgatesqlci;
+package redgatedlmautomation;
 
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
@@ -17,25 +18,55 @@ import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class PublishBuilder extends Builder {
+public class SyncBuilder extends Builder {
 
     private final String packageid;
-    public String getPackageid() { return packageid; }
+    public String getPackageid() {
+        return packageid;
+    }
 
-    private final String nugetFeedUrl;
-    public String getNugetFeedUrl() { return nugetFeedUrl;  }
+    private final String serverName;
+    public String getServerName() {
+        return serverName;
+    }
 
-    private final String nugetFeedApiKey;
-    public String getNugetFeedApiKey() { return nugetFeedApiKey;  }
+    private final String dbName;
+    public String getDbName() {
+        return dbName;
+    }
+
+    private final String serverAuth;
+    public String getServerAuth() {
+        return serverAuth;
+    }
+
+    private final String username;
+    public String getUsername() {
+        return username;
+    }
+
+    private final String password;
+    public String getPassword() {
+        return password;
+    }
+
+    private final String additionalParams;
+    public String getAdditionalParams() {
+        return additionalParams;
+    }
 
     private final String packageVersion;
     public String getPackageVersion() { return packageVersion;  }
 
     @DataBoundConstructor
-    public PublishBuilder(String packageid, String nugetFeedUrl, String nugetFeedApiKey, String packageVersion) {
+    public SyncBuilder(String packageid, String serverName, String dbName, ServerAuth serverAuth, String additionalParams, String packageVersion) {
         this.packageid = packageid;
-        this.nugetFeedUrl = nugetFeedUrl;
-        this.nugetFeedApiKey = nugetFeedApiKey;
+        this.serverName = serverName;
+        this.dbName = dbName;
+        this.serverAuth = serverAuth.getvalue();
+        this.username = serverAuth.getUsername();
+        this.password = serverAuth.getPassword();
+        this.additionalParams = additionalParams;
         this.packageVersion = packageVersion;
     }
 
@@ -49,13 +80,19 @@ public class PublishBuilder extends Builder {
 
         String packageFileName = Utils.constructPackageFileName(getPackageid(), buildNumber);
 
-        params.add("PUBLISH");
+        params.add("SYNC");
         params.add("/package=" + packageFileName);
-        params.add("/nugetFeedUrl=" + getNugetFeedUrl());
 
-        if (!getNugetFeedApiKey().isEmpty()) {
-            params.add("/nugetFeedApiKey=" + getNugetFeedApiKey());
+        params.add("/databaseServer=" + getServerName());
+        params.add("/databaseName=" + getDbName());
+
+        if (getServerAuth().equals("sqlServerAuth")) {
+            params.add("/databaseUserName=" + getUsername());
+            params.add("/databasePassword=" + getPassword());
         }
+
+        if (!getAdditionalParams().isEmpty())
+            params.add("/additionalCompareArgs=" + getAdditionalParams());
 
         return Utils.runSQLCIWithParams(build, launcher, listener, params);
     }
@@ -83,15 +120,21 @@ public class PublishBuilder extends Builder {
             load();
         }
 
-        public FormValidation doCheckPackageid(@QueryParameter String value) throws IOException, ServletException {
-            if (value.length() == 0)
+        public FormValidation doCheckPackageid(@QueryParameter String packageid) throws IOException, ServletException {
+            if (packageid.length() == 0)
                 return FormValidation.error("Enter a package ID");
             return FormValidation.ok();
         }
 
-        public FormValidation doCheckNugetFeedUrl(@QueryParameter String nugetFeedUrl) throws IOException, ServletException {
-            if (nugetFeedUrl.length() == 0)
-                return FormValidation.error("Enter a NuGet package feed URL");
+        public FormValidation doCheckDbName(@QueryParameter String dbName) throws IOException, ServletException {
+            if (dbName.length() == 0)
+                return FormValidation.error("Enter a database name");
+            return FormValidation.ok();
+        }
+
+        public FormValidation doCheckServerName(@QueryParameter String serverName) throws IOException, ServletException {
+            if (serverName.length() == 0)
+                return FormValidation.error("Enter a server name");
             return FormValidation.ok();
         }
 
@@ -104,7 +147,7 @@ public class PublishBuilder extends Builder {
          * This human readable name is used in the configuration screen.
          */
         public String getDisplayName() {
-            return "Redgate SQL CI: Publish a database package";
+            return "Redgate DLM Automation: Sync a database package";
         }
 
         @Override

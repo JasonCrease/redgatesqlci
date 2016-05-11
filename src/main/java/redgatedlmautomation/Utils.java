@@ -1,4 +1,4 @@
-package redgatesqlci;
+package redgatedlmautomation;
 
 import hudson.EnvVars;
 import hudson.Launcher;
@@ -46,7 +46,7 @@ public class Utils {
 
         if(sqlCiLocation == "")
         {
-            listener.error("SQL CI executable cannot be found. Checked " + allLocations + ".Please install Redgate SQL CI on this agent.");
+            listener.error("SQL CI executable cannot be found. Checked " + allLocations + ". Please install Redgate DLM Automation on this agent.");
             return false;
         }
 

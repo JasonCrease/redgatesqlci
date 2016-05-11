@@ -13,14 +13,14 @@
   </style>
 
   <f:section title="Database package to sync">
-    <f:block><span class="tip">Enter the ID of the package you want to use to update the target database. The ID must be for a package built by Red Gate SQL CI.</span></f:block>
+    <f:block><span class="tip">Enter the ID of the package you want to use to update the target database. The ID must be for a package built by Redgate DLM Automation.</span></f:block>
     <f:entry title="Package ID:" field="packageid">
       <f:textbox/>
     </f:entry>
   </f:section>
 
   <f:section title="Target database">
-    <f:block><span class="tip">Red Gate SQL CI will update the target database you specify here.</span></f:block>
+    <f:block><span class="tip">Redgate DLM Automation will update the target database you specify here.</span></f:block>
     <f:entry title="Server:" field="serverName">
       <f:textbox/>
     </f:entry>
