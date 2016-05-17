@@ -147,7 +147,7 @@ public class SyncBuilder extends Builder {
          * This human readable name is used in the configuration screen.
          */
         public String getDisplayName() {
-            return "Redgate SQL CI: Sync a database package";
+            return "Redgate DLM Automation: Sync a database package";
         }
 
         @Override

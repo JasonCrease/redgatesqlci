@@ -11,14 +11,14 @@
   </style>
 
   <f:section title="Database package to test">
-    <f:block><span class="tip">Enter the ID of the package that you want to test. The ID must be for a package built by Red Gate SQL CI.</span></f:block>
+    <f:block><span class="tip">Enter the ID of the package that you want to test. The ID must be for a package built by Redgate DLM Automation.</span></f:block>
     <f:entry title="Package ID:" field="packageid">
       <f:textbox/>
     </f:entry>
   </f:section>
 
   <f:section title="Temporary database server">
-    <f:block><span class="tip">Red Gate SQL CI will recreate and validate your database on a temporary server before testing it.</span></f:block>
+    <f:block><span class="tip">Redgate DLM Automation will recreate and validate your database on a temporary server before testing it.</span></f:block>
     <f:radioBlock name="tempServer" title="SQL LocalDB (recommended)" value="localdb" checked="${instance.tempServer == null || instance.tempServer == 'localdb'}"/>
     <f:radioBlock name="tempServer" title="SQL Server" value="sqlServer"  checked="${!(instance.tempServer == null || instance.tempServer == 'localdb')}">
       <f:nested>

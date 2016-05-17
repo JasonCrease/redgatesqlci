@@ -189,7 +189,7 @@ public class TestBuilder extends Builder {
          * This human readable name is used in the configuration screen.
          */
         public String getDisplayName() {
-            return "Redgate SQL CI: Test a database package";
+            return "Redgate DLM Automation: Test a database package";
         }
 
         @Override

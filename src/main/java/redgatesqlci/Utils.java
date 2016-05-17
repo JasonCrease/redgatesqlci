@@ -46,7 +46,7 @@ public class Utils {
 
         if(sqlCiLocation == "")
         {
-            listener.error("SQL CI executable cannot be found. Checked " + allLocations + ".Please install Redgate SQL CI on this agent.");
+            listener.error("SQL CI executable cannot be found. Checked " + allLocations + ". Please install Redgate DLM Automation on this agent.");
             return false;
         }
 
@@ -94,6 +94,7 @@ public class Utils {
         }
         catch (java.io.IOException e) {}
         catch (java.lang.InterruptedException e) {}
+        vars.put("REDGATE_FUR_ENVIRONMENT", "Jenkins Plugin");
         procStarter.envs(vars);
 
         procStarter.cmdAsSingleString(longString).stdout(listener.getLogger()).stderr(listener.getLogger()).pwd(build.getWorkspace());

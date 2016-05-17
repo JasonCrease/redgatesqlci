@@ -34,7 +34,7 @@
 
     <f:section title="Temporary database server">
         <f:block>
-            <span class="tip">Red Gate SQL CI will recreate and validate your database on a temporary server.</span>
+            <span class="tip">Redgate DLM Automation will recreate and validate your database on a temporary server.</span>
         </f:block>
 
         <f:radioBlock name="tempServer" title="SQL LocalDB (recommended)" value="localdb" checked="${instance.tempServer == null || instance.tempServer == 'localdb'}"/>
