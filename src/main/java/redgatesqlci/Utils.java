@@ -54,7 +54,7 @@ public class Utils {
         ArrayList<String> procParams = new ArrayList<String>();
         procParams.add(sqlCiLocation);
 
-        String longString = sqlCiLocation;
+        String longString = "\"" + sqlCiLocation + "\"";
 
         // Here we do some parameter fiddling. Existing quotes must be escaped with three slashes
         // Then, we need to surround the part on the right of the = with quotes iff it has a space.
