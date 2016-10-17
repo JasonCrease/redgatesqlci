@@ -26,8 +26,8 @@ public class Utils {
         String[] possibleSqlCiLocations = 
             {
                 getEnvironmentVariable("DLMAS_HOME", channel) +  "\\sqlci.ps1",
-                getEnvironmentVariable("ProgramFiles", channel) + "\\Red Gate\\DLM Automation Suite 2\\sqlci.ps1",
-                getEnvironmentVariable("ProgramFiles(X86)", channel) + "\\Red Gate\\DLM Automation Suite 2\\sqlci.ps1",
+                getEnvironmentVariable("ProgramFiles", channel) + "\\Red Gate\\DLM Automation 2\\sqlci.ps1",
+                getEnvironmentVariable("ProgramFiles(X86)", channel) + "\\Red Gate\\DLM Automation 2\\sqlci.ps1",
             };
         
 
