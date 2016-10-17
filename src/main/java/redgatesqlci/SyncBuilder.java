@@ -50,24 +50,36 @@ public class SyncBuilder extends Builder {
         return password;
     }
 
-    private final String additionalParams;
-    public String getAdditionalParams() {
-        return additionalParams;
+    private final String options;
+    public String getOptions() {
+        return options;
     }
+
+    private final String filter;
+    public String getFilter() { return filter; }
 
     private final String packageVersion;
     public String getPackageVersion() { return packageVersion;  }
 
+    private final String isolationLevel;
+    public String getIsolationLevel() { return isolationLevel; }
+
+    private final boolean updateScript;
+    public boolean getUpdataScript() { return updateScript; }
+
     @DataBoundConstructor
-    public SyncBuilder(String packageid, String serverName, String dbName, ServerAuth serverAuth, String additionalParams, String packageVersion) {
+    public SyncBuilder(String packageid, String serverName, String dbName, ServerAuth serverAuth, String options, String filter, String packageVersion, String isolationLevel, boolean updateScript) {
         this.packageid = packageid;
         this.serverName = serverName;
         this.dbName = dbName;
         this.serverAuth = serverAuth.getvalue();
         this.username = serverAuth.getUsername();
         this.password = serverAuth.getPassword();
-        this.additionalParams = additionalParams;
+        this.options = options;
+        this.filter = filter;
         this.packageVersion = packageVersion;
+        this.isolationLevel = isolationLevel;
+        this.updateScript = updateScript;
     }
 
     @Override
@@ -80,19 +92,41 @@ public class SyncBuilder extends Builder {
 
         String packageFileName = Utils.constructPackageFileName(getPackageid(), buildNumber);
 
-        params.add("SYNC");
-        params.add("/package=" + packageFileName);
+        params.add("Sync");
+        params.add("-package");
+        params.add(packageFileName);
 
-        params.add("/databaseServer=" + getServerName());
-        params.add("/databaseName=" + getDbName());
+        params.add("-databaseServer");
+        params.add(getServerName());
+        params.add("-databaseName");
+        params.add(getDbName());
 
         if (getServerAuth().equals("sqlServerAuth")) {
-            params.add("/databaseUserName=" + getUsername());
-            params.add("/databasePassword=" + getPassword());
+            params.add("-databaseUserName");
+            params.add(getUsername());
+            params.add("-databasePassword");
+            params.add(getPassword());
         }
 
-        if (!getAdditionalParams().isEmpty())
-            params.add("/additionalCompareArgs=" + getAdditionalParams());
+        if (!getOptions().isEmpty()) {
+            params.add("-Options");
+            params.add(getOptions());
+        }
+
+        if (!getFilter().isEmpty()) {
+            params.add("-filter");
+            params.add(getFilter());
+        }
+
+        if (!getIsolationLevel().isEmpty()) {
+            params.add("-transactionIsolationLevel");
+            params.add(getIsolationLevel());
+        }
+
+        if(getUpdataScript()){
+            params.add("-scriptFile");
+            params.add(getPackageid() + "." + buildNumber + ".sql");
+        }
 
         return Utils.runSQLCIWithParams(build, launcher, listener, params);
     }
