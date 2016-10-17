@@ -65,7 +65,7 @@ public class SyncBuilder extends Builder {
     public String getIsolationLevel() { return isolationLevel; }
 
     private final boolean updateScript;
-    public boolean getUpdataScript() { return updateScript; }
+    public boolean getUpdateScript() { return updateScript; }
 
     @DataBoundConstructor
     public SyncBuilder(String packageid, String serverName, String dbName, ServerAuth serverAuth, String options, String filter, String packageVersion, String isolationLevel, boolean updateScript) {
@@ -123,7 +123,7 @@ public class SyncBuilder extends Builder {
             params.add(getIsolationLevel());
         }
 
-        if(getUpdataScript()){
+        if(getUpdateScript()){
             params.add("-scriptFile");
             params.add(getPackageid() + "." + buildNumber + ".sql");
         }
