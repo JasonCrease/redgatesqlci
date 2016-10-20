@@ -49,12 +49,15 @@ public class PublishBuilder extends Builder {
 
         String packageFileName = Utils.constructPackageFileName(getPackageid(), buildNumber);
 
-        params.add("PUBLISH");
-        params.add("/package=" + packageFileName);
-        params.add("/nugetFeedUrl=" + getNugetFeedUrl());
+        params.add("Publish");
+        params.add("-package");
+        params.add(packageFileName);
+        params.add("-nugetFeedUrl");
+        params.add(getNugetFeedUrl());
 
         if (!getNugetFeedApiKey().isEmpty()) {
-            params.add("/nugetFeedApiKey=" + getNugetFeedApiKey());
+            params.add("-nugetFeedApiKey");
+            params.add(getNugetFeedApiKey());
         }
 
         return Utils.runSQLCIWithParams(build, launcher, listener, params);

@@ -65,12 +65,10 @@
     <f:section title="Advanced Options">
 
         <f:block>
-            <f:block>
-                <span class="tip">Specify SQL Compare switches to run on the command line.</span>
-                <a href="http://www.red-gate.com/teamcityplugin/help/clsyntax" target="_blank" style="margin-left:20px;margin-right:20px;">Syntax</a>
-                <a href="http://www.red-gate.com/teamcityplugin/help/clexamples" target="_blank">Examples</a>
-            </f:block>
-            <f:entry title="Additional parameters:" field="additionalParams">
+            <f:entry title="SQL Compare options:" field="options">
+                <f:textbox/>
+            </f:entry>
+            <f:entry title="SQL Compare filter:" field="filter">
                 <f:textbox/>
             </f:entry>
             <f:entry title="Package version:" field="packageVersion">
