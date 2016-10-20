@@ -40,7 +40,7 @@ public class Utils {
             allLocations = allLocations.concat(possibleLocation + "  ");
         }
 
-        if(sqlCiLocation == "")
+        if(sqlCiLocation.isEmpty())
         {
             listener.error("SQLCI.ps1 cannot be found. Checked " + allLocations + ". Please install Redgate DLM Automation 2 on this agent.");
             return false;
