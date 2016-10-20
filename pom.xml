@@ -11,7 +11,7 @@
 
   <groupId>com.redgate.plugins.redgatesqlci</groupId>
   <artifactId>redgate-sql-ci</artifactId>
-  <version>1.0.15-SNAPSHOT</version>
+  <version>1.0.16-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
   <name>Redgate DLM Automation</name>

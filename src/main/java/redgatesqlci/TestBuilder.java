@@ -52,10 +52,13 @@ public class TestBuilder extends Builder {
         return password;
     }
 
-    private final String additionalParams;
-    public String getAdditionalParams() {
-        return additionalParams;
+    private final String options;
+    public String getOptions() {
+        return options;
     }
+
+    private final String filter;
+    public String getFilter() { return filter; }
 
     private final String runOnlyParams;
     public String getRunOnlyParams() {
@@ -77,7 +80,7 @@ public class TestBuilder extends Builder {
     public String getPackageVersion() { return packageVersion;  }
 
     @DataBoundConstructor
-    public TestBuilder(String packageid, Server tempServer, RunTestSet runTestSet, GenerateTestData generateTestData, String additionalParams, String packageVersion) {
+    public TestBuilder(String packageid, Server tempServer, RunTestSet runTestSet, GenerateTestData generateTestData, String options, String filter, String packageVersion) {
 
         this.packageid = packageid;
         this.tempServer = tempServer.getvalue();
@@ -111,7 +114,8 @@ public class TestBuilder extends Builder {
         else
             this.sqlgenPath = "";
 
-        this.additionalParams = additionalParams;
+        this.options = options;
+        this.filter = filter;
         this.packageVersion = packageVersion;
     }
 
@@ -125,28 +129,44 @@ public class TestBuilder extends Builder {
 
         String packageFileName = Utils.constructPackageFileName(getPackageid(), buildNumber);
 
-        params.add("TEST");
-        params.add("/package=" + packageFileName);
+        params.add("Test");
+        params.add("-package");
+        params.add(packageFileName);
 
         if (getTempServer().equals("sqlServer")) {
-            params.add("/temporaryDatabaseServer=" + getServerName());
-            params.add("/temporaryDatabaseName=" + getDbName());
+            params.add("-temporaryDatabaseServer");
+            params.add(getServerName());
+            if (!getDbName().isEmpty()){
+                params.add("-temporaryDatabaseName");
+                params.add(getDbName());
+            }
 
             if (getServerAuth().equals("sqlServerAuth")) {
-                params.add("/temporaryDatabaseUserName=" + getUsername());
-                params.add("/temporaryDatabasePassword=" + getPassword());
+                params.add("-temporaryDatabaseUserName");
+                params.add(getUsername());
+                params.add("-temporaryDatabasePassword");
+                params.add(getPassword());
             }
         }
 
         if (getRunTestSet().equals("runOnlyTest")) {
-            params.add("/runOnly=" + getRunOnlyParams());
+            params.add("-runOnly");
+            params.add(getRunOnlyParams());
         }
         if (getGenerateTestData() != null) {
-            params.add("/sqlDataGenerator=" + getSqlgenPath());
+            params.add("-sqlDataGenerator");
+            params.add(getSqlgenPath());
         }
 
-        if (!getAdditionalParams().isEmpty())
-            params.add("/additionalCompareArgs=" + getAdditionalParams());
+        if (!getOptions().isEmpty()) {
+            params.add("-Options");
+            params.add(getOptions());
+        }
+
+        if (!getFilter().isEmpty()) {
+            params.add("-filter");
+            params.add(getFilter());
+        }
 
         return Utils.runSQLCIWithParams(build, launcher, listener, params);
     }

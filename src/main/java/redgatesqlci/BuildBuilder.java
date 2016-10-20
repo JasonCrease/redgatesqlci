@@ -16,8 +16,10 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Map;
+import java.nio.file.Path;
 
 public class BuildBuilder extends Builder {
 
@@ -66,10 +68,13 @@ public class BuildBuilder extends Builder {
         return password;
     }
 
-    private final String additionalParams;
-    public String getAdditionalParams() {
-        return additionalParams;
+    private final String options;
+    public String getOptions() {
+        return options;
     }
+
+    private final String filter;
+    public String getFilter() { return filter; }
 
     private final String packageVersion;
     public String getPackageVersion() {
@@ -93,7 +98,7 @@ public class BuildBuilder extends Builder {
 
 
     @DataBoundConstructor
-    public BuildBuilder(DbFolder dbFolder, String packageid, Server tempServer, String additionalParams, String packageVersion, DlmDashboard dlmDashboard) {
+    public BuildBuilder(DbFolder dbFolder, String packageid, Server tempServer, String options, String filter, String packageVersion, DlmDashboard dlmDashboard) {
         this.dbFolder = dbFolder.getvalue();
         this.subfolder = dbFolder.getsubfolder();
         this.packageid = packageid;
@@ -115,7 +120,8 @@ public class BuildBuilder extends Builder {
             this.password = "";
         }
 
-        this.additionalParams = additionalParams;
+        this.options = options;
+        this.filter = filter;
         this.packageVersion = packageVersion;
 
         this.sendToDlmDashboard = dlmDashboard != null;
@@ -135,36 +141,60 @@ public class BuildBuilder extends Builder {
         ArrayList<String> params = new ArrayList<String>();
 
         FilePath checkOutPath = build.getWorkspace();
-        params.add("BUILD");
+        params.add("Build");
 
         if (getDbFolder().equals("subfolder")) {
-            params.add("/scriptsFolder=" + checkOutPath.getRemote()  + getSubfolder());
+            params.add("-scriptsFolder");
+            Path path = Paths.get(checkOutPath.getRemote(),getSubfolder());
+            params.add(path.toString());
         } else{
-            params.add("/scriptsFolder=" + checkOutPath.getRemote());
+            params.add("-scriptsFolder");
+            params.add(checkOutPath.getRemote());
         }
-        params.add("/packageId=" + getPackageid());
+        params.add("-packageId");
+        params.add(getPackageid());
 
-        if(getPackageVersion() == null || getPackageVersion().isEmpty())
-            params.add("/packageVersion=1.0." + build.getNumber());
-        else
-            params.add("/packageVersion=" + getPackageVersion());
+        if(getPackageVersion() == null || getPackageVersion().isEmpty()) {
+            params.add("-packageVersion");
+            params.add("1.0." + build.getNumber());
+        }
+        else {
+            params.add("-packageVersion");
+            params.add(getPackageVersion());
+        }
 
-        if (!additionalParams.isEmpty())
-            params.add("/additionalCompareArgs=" + getAdditionalParams());
+        if (!options.isEmpty()) {
+            params.add("-Options");
+            params.add(Utils.getEscapedOptions(getOptions()));
+        }
+
+        if (!filter.isEmpty()) {
+            params.add("-filter");
+            params.add(getFilter());
+        }
 
         if (getTempServer().equals("sqlServer")) {
-            params.add("/temporaryDatabaseServer=" + getServerName());
-            params.add("/temporaryDatabaseName=" + getDbName());
+            params.add("-temporaryDatabaseServer");
+            params.add(getServerName());
+            if (!getDbName().isEmpty()){
+                params.add("-temporaryDatabaseName");
+                params.add(getDbName());
+            }
+
 
             if (getServerAuth().equals("sqlServerAuth")) {
-                params.add("/temporaryDatabaseUserName=" + getUsername());
-                params.add("/temporaryDatabasePassword=" + getPassword());
+                params.add("-temporaryDatabaseUserName");
+                params.add(getUsername());
+                params.add("-temporaryDatabasePassword");
+                params.add(getPassword());
             }
         }
 
         if (getSendToDlmDashboard()) {
-            params.add("/dlmDashboardHost=" + getDlmDashboardHost());
-            params.add("/dlmDashboardPort=" + getDlmDashboardPort());
+            params.add("-dlmDashboardHost");
+            params.add(getDlmDashboardHost());
+            params.add("-dlmDashboardPort");
+            params.add(getDlmDashboardPort());
         }
 
         return Utils.runSQLCIWithParams(build, launcher, listener, params);

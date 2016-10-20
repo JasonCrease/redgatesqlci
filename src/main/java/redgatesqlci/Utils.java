@@ -16,7 +16,7 @@ import java.util.Map;
 import jenkins.security.MasterToSlaveCallable;
 
 public class Utils {    
-    public static boolean runSQLCIWithParams(AbstractBuild build, Launcher launcher, BuildListener listener, Collection<String> params)
+    public static boolean runSQLCIWithParams(AbstractBuild build, Launcher launcher, BuildListener listener, ArrayList<String> params)
     {
         VirtualChannel channel = launcher.getChannel();
         
@@ -25,13 +25,9 @@ public class Utils {
         String allLocations = "";
         String[] possibleSqlCiLocations = 
             {
-                getEnvironmentVariable("DLMAS_HOME", channel) +  "sqlCI\\sqlci.exe",
-                getEnvironmentVariable("ProgramFiles", channel) + "\\Red Gate\\DLM Automation Suite 1\\sqlCI\\sqlci.exe",
-                getEnvironmentVariable("ProgramFiles", channel) + "\\Red Gate\\SQL Automation Pack 1\\sqlCI\\sqlci.exe",
-                getEnvironmentVariable("ProgramFiles", channel) + "\\Red Gate\\sqlCI\\sqlci.exe",
-                getEnvironmentVariable("ProgramFiles(X86)", channel) + "\\Red Gate\\DLM Automation Suite 1\\sqlCI\\sqlci.exe",
-                getEnvironmentVariable("ProgramFiles(X86)", channel) +  "\\Red Gate\\SQL Automation Pack 1\\sqlCI\\sqlci.exe",
-                getEnvironmentVariable("ProgramFiles(X86)", channel) +  "\\Red Gate\\sqlCI\\sqlci.exe"
+                getEnvironmentVariable("DLMAS_HOME", channel) +  "\\sqlci.ps1",
+                getEnvironmentVariable("ProgramFiles", channel) + "\\Red Gate\\DLM Automation 2\\sqlci.ps1",
+                getEnvironmentVariable("ProgramFiles(X86)", channel) + "\\Red Gate\\DLM Automation 2\\sqlci.ps1",
             };
         
 
@@ -46,15 +42,21 @@ public class Utils {
 
         if(sqlCiLocation == "")
         {
-            listener.error("SQL CI executable cannot be found. Checked " + allLocations + ". Please install Redgate DLM Automation on this agent.");
+            listener.error("SQLCI.ps1 cannot be found. Checked " + allLocations + ". Please install Redgate DLM Automation 2 on this agent.");
             return false;
         }
 
         // Set up arguments
         ArrayList<String> procParams = new ArrayList<String>();
-        procParams.add(sqlCiLocation);
+        procParams.add(0, "\"" + getPowerShellExeLocation() + "\"");
+        procParams.add(1, "-NonInteractive");
+        procParams.add(2, "-ExecutionPolicy");
+        procParams.add(3, "Bypass");
+        procParams.add(4, "-File");
+        procParams.add(5, "\"" + sqlCiLocation + "\"");
+        procParams.add(6, "-Verbose");
 
-        String longString = "\"" + sqlCiLocation + "\"";
+        String longString = "\"" + getPowerShellExeLocation() + "\" -NonInteractive -ExecutionPolicy Bypass -File \"" + sqlCiLocation + "\"" + " -Verbose";
 
         // Here we do some parameter fiddling. Existing quotes must be escaped with three slashes
         // Then, we need to surround the part on the right of the = with quotes iff it has a space.
@@ -70,8 +72,7 @@ public class Utils {
             // If there are spaces, surround bit after = with quotes
             if(fixedParam.contains(" "))
             {
-                int equalsPlace = fixedParam.indexOf("=");
-                fixedParam = fixedParam.substring(0, equalsPlace + 1) +  "\\\"" + fixedParam.substring(equalsPlace + 1, fixedParam.length()) + "\\\"";
+                fixedParam = "\"" + fixedParam + "\"";
             }
 
             procParams.add(param);
@@ -142,5 +143,21 @@ public class Utils {
         } catch (Exception e) {
             return false;
         }        
+    }
+
+    private static String getPowerShellExeLocation(){
+        String psHome = System.getenv("PS_HOME");
+        if (psHome == null) {
+            psHome = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe";
+        }
+        return psHome;
+    }
+
+    public static String getEscapedOptions(String options){
+        if (options.trim().startsWith("-")){
+            StringBuilder sb = new StringBuilder(options);
+            return sb.insert(0, ',').toString();
+        }
+        return options;
     }
 }
