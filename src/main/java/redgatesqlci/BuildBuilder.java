@@ -141,6 +141,10 @@ public class BuildBuilder extends Builder {
         ArrayList<String> params = new ArrayList<String>();
 
         FilePath checkOutPath = build.getWorkspace();
+        if (checkOutPath == null)
+        {
+            return false;
+        }
         params.add("Build");
 
         if (getDbFolder().equals("subfolder")) {
