@@ -88,7 +88,7 @@ public class Utils {
         Launcher.ProcStarter procStarter = launcher.new ProcStarter();
 
         // Set process environment variables to system environment variables. This shouldn't be necessary!
-        EnvVars envVars = new EnvVars();
+        EnvVars envVars;
         try {
             envVars = build.getEnvironment(listener);
             vars.putAll(envVars);
