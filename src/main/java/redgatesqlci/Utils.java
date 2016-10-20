@@ -40,7 +40,7 @@ public class Utils {
             allLocations = allLocations.concat(possibleLocation + "  ");
         }
 
-        if(sqlCiLocation == "")
+        if(sqlCiLocation.isEmpty())
         {
             listener.error("SQLCI.ps1 cannot be found. Checked " + allLocations + ". Please install Redgate DLM Automation 2 on this agent.");
             return false;
@@ -56,7 +56,9 @@ public class Utils {
         procParams.add(5, "\"" + sqlCiLocation + "\"");
         procParams.add(6, "-Verbose");
 
-        String longString = "\"" + getPowerShellExeLocation() + "\" -NonInteractive -ExecutionPolicy Bypass -File \"" + sqlCiLocation + "\"" + " -Verbose";
+        StringBuffer longStringBuffer = new StringBuffer();
+
+        longStringBuffer.append("\"" + getPowerShellExeLocation() + "\" -NonInteractive -ExecutionPolicy Bypass -File \"" + sqlCiLocation + "\"" + " -Verbose");
 
         // Here we do some parameter fiddling. Existing quotes must be escaped with three slashes
         // Then, we need to surround the part on the right of the = with quotes iff it has a space.
@@ -76,8 +78,9 @@ public class Utils {
             }
 
             procParams.add(param);
-            longString += " " + fixedParam;
+            longStringBuffer.append(" " + fixedParam);
         }
+        String longString = longStringBuffer.toString();
 
         // Run SQL CI with parameters. Send output and error streams to logger.Map<String, String> vars = new HashMap<String, String>();
         Map<String, String> vars = new HashMap<String, String>();
@@ -88,7 +91,7 @@ public class Utils {
         Launcher.ProcStarter procStarter = launcher.new ProcStarter();
 
         // Set process environment variables to system environment variables. This shouldn't be necessary!
-        EnvVars envVars = new EnvVars();
+        EnvVars envVars;
         try {
             envVars = build.getEnvironment(listener);
             vars.putAll(envVars);
