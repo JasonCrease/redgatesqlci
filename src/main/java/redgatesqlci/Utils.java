@@ -2,28 +2,29 @@ package redgatesqlci;
 
 import hudson.EnvVars;
 import hudson.Launcher;
+import hudson.Launcher.ProcStarter;
 import hudson.Proc;
 import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
+import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import jenkins.security.MasterToSlaveCallable;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Utils {
-    public static boolean runSQLCIWithParams(
-        AbstractBuild build, Launcher launcher, BuildListener listener, ArrayList<String> params) {
-        VirtualChannel channel = launcher.getChannel();
+    static boolean runSQLCIWithParams(
+        final AbstractBuild<?, ?> build, final Launcher launcher, final TaskListener listener,
+        final Iterable<String> params) {
+        final VirtualChannel channel = launcher.getChannel();
 
         // Check SQL CI is installed and get location.
         String sqlCiLocation = "";
-        String allLocations = "";
-        String[] possibleSqlCiLocations =
-            {
+        final StringBuilder allLocations = new StringBuilder();
+        final String[] possibleSqlCiLocations =
+            new String[]{
                 getEnvironmentVariable("DLMAS_HOME", channel) + "\\sqlci.ps1",
                 getEnvironmentVariable("ProgramFiles", channel) + "\\Red Gate\\DLM Automation 2\\sqlci.ps1",
                 getEnvironmentVariable("ProgramFiles(X86)", channel) +
@@ -31,12 +32,12 @@ public class Utils {
             };
 
 
-        for (String possibleLocation : possibleSqlCiLocations) {
+        for (final String possibleLocation : possibleSqlCiLocations) {
             if (ciExists(possibleLocation, channel)) {
                 sqlCiLocation = possibleLocation;
                 break;
             }
-            allLocations = allLocations.concat(possibleLocation + "  ");
+            allLocations.append(possibleLocation).append("  ");
         }
 
         if (sqlCiLocation.isEmpty()) {
@@ -45,15 +46,15 @@ public class Utils {
             return false;
         }
 
-        StringBuffer longStringBuffer = new StringBuffer();
+        final StringBuilder longStringBuilder = new StringBuilder();
 
-        longStringBuffer
-            .append("\"" + getPowerShellExeLocation() + "\" -NonInteractive -ExecutionPolicy Bypass -File \"" +
-                        sqlCiLocation + "\"" + " -Verbose");
+        longStringBuilder.append("\"").append(getPowerShellExeLocation())
+                         .append("\" -NonInteractive -ExecutionPolicy Bypass -File \"").append(sqlCiLocation)
+                         .append("\"").append(" -Verbose");
 
         // Here we do some parameter fiddling. Existing quotes must be escaped with three slashes
         // Then, we need to surround the part on the right of the = with quotes iff it has a space.
-        for (String param : params) {
+        for (final String param : params) {
             // Trailing spaces can be a problem, so trim string.
             String fixedParam = param.trim();
 
@@ -67,25 +68,23 @@ public class Utils {
                 fixedParam = "\"" + fixedParam + "\"";
             }
 
-            longStringBuffer.append(" " + fixedParam);
+            longStringBuilder.append(" ").append(fixedParam);
         }
-        String longString = longStringBuffer.toString();
+        final String longString = longStringBuilder.toString();
 
         // Run SQL CI with parameters. Send output and error streams to logger.Map<String, String> vars = new HashMap<String, String>();
-        Map<String, String> vars = new HashMap<String, String>();
-        vars.putAll(build.getBuildVariables());
+        final Map<String, String> vars = new HashMap<String, String>(build.getBuildVariables());
 
 
-        Proc proc = null;
-        Launcher.ProcStarter procStarter = launcher.new ProcStarter();
+        final Proc proc;
+        final ProcStarter procStarter = launcher.new ProcStarter();
 
         // Set process environment variables to system environment variables. This shouldn't be necessary!
-        EnvVars envVars;
+        final EnvVars envVars;
         try {
             envVars = build.getEnvironment(listener);
             vars.putAll(envVars);
-        } catch (java.io.IOException e) {
-        } catch (java.lang.InterruptedException e) {
+        } catch (final IOException | InterruptedException ignored) {
         }
         vars.put("REDGATE_FUR_ENVIRONMENT", "Jenkins Plugin");
         procStarter.envs(vars);
@@ -95,58 +94,59 @@ public class Utils {
 
         try {
             proc = launcher.launch(procStarter);
-            int exitCode = proc.join();
+            final int exitCode = proc.join();
             return exitCode == 0;
-        } catch (IOException e) {
+        } catch (final IOException e) {
             e.printStackTrace();
             listener.getLogger().println("IOException");
             return false;
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             e.printStackTrace();
             listener.getLogger().println("InterruptedException");
             return false;
         }
     }
 
-    public static String constructPackageFileName(String packageName, String buildNumber) {
+    static String constructPackageFileName(final String packageName, final String buildNumber) {
         return packageName + "." + buildNumber + ".nupkg";
     }
 
-    private static String getEnvironmentVariable(final String variableName, VirtualChannel channel) {
+    private static String getEnvironmentVariable(final String variableName, final VirtualChannel channel) {
         try {
             return channel.call(new MasterToSlaveCallable<String, RuntimeException>() {
                 public String call() {
                     return System.getenv(variableName);
                 }
             });
-        } catch (Exception e) {
+        } catch (final Exception e) {
             return null;
         }
     }
 
-    private static boolean ciExists(final String possibleLocation, VirtualChannel channel) {
+    private static boolean ciExists(final String possibleLocation, final VirtualChannel channel) {
         try {
             return channel.call(new MasterToSlaveCallable<Boolean, RuntimeException>() {
                 public Boolean call() {
                     return new File(possibleLocation).isFile();
                 }
             });
-        } catch (Exception e) {
+        } catch (final Exception e) {
             return false;
         }
     }
 
     private static String getPowerShellExeLocation() {
-        String psHome = System.getenv("PS_HOME");
-        if (psHome == null) {
-            psHome = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe";
+        final String psHome = System.getenv("PS_HOME");
+        if (psHome != null) {
+            return psHome;
         }
-        return psHome;
+
+        return "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe";
     }
 
-    public static String getEscapedOptions(String options) {
+    static String getEscapedOptions(final String options) {
         if (options.trim().startsWith("-")) {
-            StringBuilder sb = new StringBuilder(options);
+            final StringBuilder sb = new StringBuilder(options);
             return sb.insert(0, ',').toString();
         }
         return options;
