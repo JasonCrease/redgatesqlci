@@ -2,16 +2,15 @@ package redgatesqlci;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
-public class GenerateTestData
-{
+public class GenerateTestData {
     private String sqlgenPath;
+
     public String getSqlgenPath() {
         return sqlgenPath;
     }
 
     @DataBoundConstructor
-    public GenerateTestData(String sqlgenPath)
-    {
+    public GenerateTestData(String sqlgenPath) {
         this.sqlgenPath = sqlgenPath;
     }
 }

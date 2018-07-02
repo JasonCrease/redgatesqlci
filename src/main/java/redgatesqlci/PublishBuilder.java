@@ -20,16 +20,28 @@ import java.util.ArrayList;
 public class PublishBuilder extends Builder {
 
     private final String packageid;
-    public String getPackageid() { return packageid; }
+
+    public String getPackageid() {
+        return packageid;
+    }
 
     private final String nugetFeedUrl;
-    public String getNugetFeedUrl() { return nugetFeedUrl;  }
+
+    public String getNugetFeedUrl() {
+        return nugetFeedUrl;
+    }
 
     private final String nugetFeedApiKey;
-    public String getNugetFeedApiKey() { return nugetFeedApiKey;  }
+
+    public String getNugetFeedApiKey() {
+        return nugetFeedApiKey;
+    }
 
     private final String packageVersion;
-    public String getPackageVersion() { return packageVersion;  }
+
+    public String getPackageVersion() {
+        return packageVersion;
+    }
 
     @DataBoundConstructor
     public PublishBuilder(String packageid, String nugetFeedUrl, String nugetFeedApiKey, String packageVersion) {
@@ -44,8 +56,9 @@ public class PublishBuilder extends Builder {
         ArrayList<String> params = new ArrayList<String>();
 
         String buildNumber = "1.0." + Integer.toString(build.getNumber());
-        if(getPackageVersion() != null && !getPackageVersion().isEmpty())
+        if (getPackageVersion() != null && !getPackageVersion().isEmpty()) {
             buildNumber = getPackageVersion();
+        }
 
         String packageFileName = Utils.constructPackageFileName(getPackageid(), buildNumber);
 
@@ -69,7 +82,7 @@ public class PublishBuilder extends Builder {
     // you don't have to do this.
     @Override
     public DescriptorImpl getDescriptor() {
-        return (DescriptorImpl)super.getDescriptor();
+        return (DescriptorImpl) super.getDescriptor();
     }
 
     /**
@@ -87,14 +100,17 @@ public class PublishBuilder extends Builder {
         }
 
         public FormValidation doCheckPackageid(@QueryParameter String value) throws IOException, ServletException {
-            if (value.length() == 0)
+            if (value.length() == 0) {
                 return FormValidation.error("Enter a package ID");
+            }
             return FormValidation.ok();
         }
 
-        public FormValidation doCheckNugetFeedUrl(@QueryParameter String nugetFeedUrl) throws IOException, ServletException {
-            if (nugetFeedUrl.length() == 0)
+        public FormValidation doCheckNugetFeedUrl(
+            @QueryParameter String nugetFeedUrl) throws IOException, ServletException {
+            if (nugetFeedUrl.length() == 0) {
                 return FormValidation.error("Enter a NuGet package feed URL");
+            }
             return FormValidation.ok();
         }
 
@@ -115,7 +131,7 @@ public class PublishBuilder extends Builder {
             // To persist global configuration information,
             // set that to properties and call save().
             save();
-            return super.configure(req,formData);
+            return super.configure(req, formData);
         }
     }
 }

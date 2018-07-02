@@ -1,7 +1,6 @@
 package redgatesqlci;
 
 import hudson.Extension;
-import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
@@ -17,86 +16,111 @@ import org.kohsuke.stapler.StaplerRequest;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.concurrent.ExecutionException;
 
 public class TestBuilder extends Builder {
 
     private final String packageid;
-    public String getPackageid() { return packageid; }
+
+    public String getPackageid() {
+        return packageid;
+    }
 
     private final String tempServer;
-    public String getTempServer() { return tempServer;  }
+
+    public String getTempServer() {
+        return tempServer;
+    }
 
     private final String serverName;
+
     public String getServerName() {
         return serverName;
     }
 
     private final String dbName;
+
     public String getDbName() {
         return dbName;
     }
 
     private final String serverAuth;
+
     public String getServerAuth() {
         return serverAuth;
     }
 
     private final String username;
+
     public String getUsername() {
         return username;
     }
 
     private final String password;
+
     public String getPassword() {
         return password;
     }
 
     private final String options;
+
     public String getOptions() {
         return options;
     }
 
     private final String filter;
-    public String getFilter() { return filter; }
+
+    public String getFilter() {
+        return filter;
+    }
 
     private final String runOnlyParams;
+
     public String getRunOnlyParams() {
         return runOnlyParams;
     }
 
     private final String runTestSet;
+
     public String getRunTestSet() {
         return runTestSet;
     }
 
     private final String generateTestData;
-    public String getGenerateTestData() { return generateTestData; }
+
+    public String getGenerateTestData() {
+        return generateTestData;
+    }
 
     private final String sqlgenPath;
-    public String getSqlgenPath() { return sqlgenPath; }
+
+    public String getSqlgenPath() {
+        return sqlgenPath;
+    }
 
     private final String packageVersion;
-    public String getPackageVersion() { return packageVersion;  }
+
+    public String getPackageVersion() {
+        return packageVersion;
+    }
 
     @DataBoundConstructor
-    public TestBuilder(String packageid, Server tempServer, RunTestSet runTestSet, GenerateTestData generateTestData, String options, String filter, String packageVersion) {
+    public TestBuilder(
+        String packageid, Server tempServer, RunTestSet runTestSet, GenerateTestData generateTestData, String options,
+        String filter, String packageVersion) {
 
         this.packageid = packageid;
         this.tempServer = tempServer.getvalue();
         this.runTestSet = runTestSet.getvalue();
         this.generateTestData = generateTestData == null ? null : "true";
 
-        if(this.tempServer.equals("sqlServer"))
-        {
+        if (this.tempServer.equals("sqlServer")) {
             this.dbName = tempServer.getDbName();
             this.serverName = tempServer.getServerName();
             this.serverAuth = tempServer.getServerAuth().getvalue();
             this.username = tempServer.getServerAuth().getUsername();
             this.password = tempServer.getServerAuth().getPassword();
         }
-        else
-        {
+        else {
             this.dbName = "";
             this.serverName = "";
             this.serverAuth = "";
@@ -104,15 +128,19 @@ public class TestBuilder extends Builder {
             this.password = "";
         }
 
-        if(this.runTestSet.equals("runOnlyTest"))
+        if (this.runTestSet.equals("runOnlyTest")) {
             this.runOnlyParams = runTestSet.getRunOnlyParams();
-        else
+        }
+        else {
             this.runOnlyParams = "";
+        }
 
-        if(this.generateTestData != null)
+        if (this.generateTestData != null) {
             this.sqlgenPath = generateTestData.getSqlgenPath();
-        else
+        }
+        else {
             this.sqlgenPath = "";
+        }
 
         this.options = options;
         this.filter = filter;
@@ -124,8 +152,9 @@ public class TestBuilder extends Builder {
         ArrayList<String> params = new ArrayList<String>();
 
         String buildNumber = "1.0." + Integer.toString(build.getNumber());
-        if(getPackageVersion() != null && !getPackageVersion().isEmpty())
+        if (getPackageVersion() != null && !getPackageVersion().isEmpty()) {
             buildNumber = getPackageVersion();
+        }
 
         String packageFileName = Utils.constructPackageFileName(getPackageid(), buildNumber);
 
@@ -136,7 +165,7 @@ public class TestBuilder extends Builder {
         if (getTempServer().equals("sqlServer")) {
             params.add("-temporaryDatabaseServer");
             params.add(getServerName());
-            if (!getDbName().isEmpty()){
+            if (!getDbName().isEmpty()) {
                 params.add("-temporaryDatabaseName");
                 params.add(getDbName());
             }
@@ -177,7 +206,7 @@ public class TestBuilder extends Builder {
     // you don't have to do this.
     @Override
     public DescriptorImpl getDescriptor() {
-        return (DescriptorImpl)super.getDescriptor();
+        return (DescriptorImpl) super.getDescriptor();
     }
 
     /**
@@ -195,8 +224,9 @@ public class TestBuilder extends Builder {
         }
 
         public FormValidation doCheckPackageid(@QueryParameter String packageid) throws IOException, ServletException {
-            if (packageid.length() == 0)
+            if (packageid.length() == 0) {
                 return FormValidation.error("Enter a package ID");
+            }
             return FormValidation.ok();
         }
 
@@ -217,7 +247,7 @@ public class TestBuilder extends Builder {
             // To persist global configuration information,
             // set that to properties and call save().
             save();
-            return super.configure(req,formData);
+            return super.configure(req, formData);
         }
     }
 }

@@ -16,103 +16,120 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Map;
-import java.nio.file.Path;
 
 public class BuildBuilder extends Builder {
 
     private String dbFolder;
+
     public String getDbFolder() {
         return dbFolder;
     }
 
     private String subfolder;
+
     public String getSubfolder() {
         return subfolder;
     }
 
     private final String packageid;
+
     public String getPackageid() {
         return packageid;
     }
 
     private final String tempServer;
+
     public String getTempServer() {
         return tempServer;
     }
 
     private final String serverName;
+
     public String getServerName() {
         return serverName;
     }
 
     private final String dbName;
+
     public String getDbName() {
         return dbName;
     }
 
     private final String serverAuth;
+
     public String getServerAuth() {
         return serverAuth;
     }
 
     private final String username;
+
     public String getUsername() {
         return username;
     }
 
     private final String password;
+
     public String getPassword() {
         return password;
     }
 
     private final String options;
+
     public String getOptions() {
         return options;
     }
 
     private final String filter;
-    public String getFilter() { return filter; }
+
+    public String getFilter() {
+        return filter;
+    }
 
     private final String packageVersion;
+
     public String getPackageVersion() {
         return packageVersion;
     }
 
     private final boolean sendToDlmDashboard;
+
     public boolean getSendToDlmDashboard() {
         return sendToDlmDashboard;
     }
 
     private final String dlmDashboardHost;
+
     public String getDlmDashboardHost() {
         return dlmDashboardHost;
     }
 
     private final String dlmDashboardPort;
+
     public String getDlmDashboardPort() {
         return dlmDashboardPort;
     }
 
 
     @DataBoundConstructor
-    public BuildBuilder(DbFolder dbFolder, String packageid, Server tempServer, String options, String filter, String packageVersion, DlmDashboard dlmDashboard) {
+    public BuildBuilder(
+        DbFolder dbFolder, String packageid, Server tempServer, String options, String filter, String packageVersion,
+        DlmDashboard dlmDashboard) {
         this.dbFolder = dbFolder.getvalue();
         this.subfolder = dbFolder.getsubfolder();
         this.packageid = packageid;
         this.tempServer = tempServer.getvalue();
 
-        if(this.tempServer.equals("sqlServer")) {
+        if (this.tempServer.equals("sqlServer")) {
             this.dbName = tempServer.getDbName();
             this.serverName = tempServer.getServerName();
             this.serverAuth = tempServer.getServerAuth().getvalue();
             this.username = tempServer.getServerAuth().getUsername();
             this.password = tempServer.getServerAuth().getPassword();
         }
-        else
-        {
+        else {
             this.dbName = "";
             this.serverName = "";
             this.serverAuth = "";
@@ -125,12 +142,11 @@ public class BuildBuilder extends Builder {
         this.packageVersion = packageVersion;
 
         this.sendToDlmDashboard = dlmDashboard != null;
-        if(getSendToDlmDashboard()) {
+        if (getSendToDlmDashboard()) {
             this.dlmDashboardHost = dlmDashboard.getDlmDashboardHost();
             this.dlmDashboardPort = dlmDashboard.getDlmDashboardPort();
         }
-        else
-        {
+        else {
             this.dlmDashboardHost = null;
             this.dlmDashboardPort = null;
         }
@@ -141,24 +157,24 @@ public class BuildBuilder extends Builder {
         ArrayList<String> params = new ArrayList<String>();
 
         FilePath checkOutPath = build.getWorkspace();
-        if (checkOutPath == null)
-        {
+        if (checkOutPath == null) {
             return false;
         }
         params.add("Build");
 
         if (getDbFolder().equals("subfolder")) {
             params.add("-scriptsFolder");
-            Path path = Paths.get(checkOutPath.getRemote(),getSubfolder());
+            Path path = Paths.get(checkOutPath.getRemote(), getSubfolder());
             params.add(path.toString());
-        } else{
+        }
+        else {
             params.add("-scriptsFolder");
             params.add(checkOutPath.getRemote());
         }
         params.add("-packageId");
         params.add(getPackageid());
 
-        if(getPackageVersion() == null || getPackageVersion().isEmpty()) {
+        if (getPackageVersion() == null || getPackageVersion().isEmpty()) {
             params.add("-packageVersion");
             params.add("1.0." + build.getNumber());
         }
@@ -180,7 +196,7 @@ public class BuildBuilder extends Builder {
         if (getTempServer().equals("sqlServer")) {
             params.add("-temporaryDatabaseServer");
             params.add(getServerName());
-            if (!getDbName().isEmpty()){
+            if (!getDbName().isEmpty()) {
                 params.add("-temporaryDatabaseName");
                 params.add(getDbName());
             }
@@ -210,7 +226,7 @@ public class BuildBuilder extends Builder {
     // you don't have to do this.
     @Override
     public DescriptorImpl getDescriptor() {
-        return (DescriptorImpl)super.getDescriptor();
+        return (DescriptorImpl) super.getDescriptor();
     }
 
     /**
@@ -220,7 +236,7 @@ public class BuildBuilder extends Builder {
     @Extension // This indicates to Jenkins that this is an implementation of an extension point.
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
         /**
-         * In order to load the persisted global configuration, you have to 
+         * In order to load the persisted global configuration, you have to
          * call load() in the constructor.
          */
         public DescriptorImpl() {
@@ -228,8 +244,9 @@ public class BuildBuilder extends Builder {
         }
 
         public FormValidation doCheckPackageid(@QueryParameter String value) throws IOException, ServletException {
-            if (value.length() == 0)
+            if (value.length() == 0) {
                 return FormValidation.error("Enter a package ID.");
+            }
             return FormValidation.ok();
         }
 
@@ -253,7 +270,7 @@ public class BuildBuilder extends Builder {
             // To persist global configuration information,
             // set that to properties and call save().
             save();
-            return super.configure(req,formData);
+            return super.configure(req, formData);
         }
     }
 }

@@ -1,7 +1,6 @@
 package redgatesqlci;
 
 import hudson.Extension;
-import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
@@ -21,54 +20,75 @@ import java.util.ArrayList;
 public class SyncBuilder extends Builder {
 
     private final String packageid;
+
     public String getPackageid() {
         return packageid;
     }
 
     private final String serverName;
+
     public String getServerName() {
         return serverName;
     }
 
     private final String dbName;
+
     public String getDbName() {
         return dbName;
     }
 
     private final String serverAuth;
+
     public String getServerAuth() {
         return serverAuth;
     }
 
     private final String username;
+
     public String getUsername() {
         return username;
     }
 
     private final String password;
+
     public String getPassword() {
         return password;
     }
 
     private final String options;
+
     public String getOptions() {
         return options;
     }
 
     private final String filter;
-    public String getFilter() { return filter; }
+
+    public String getFilter() {
+        return filter;
+    }
 
     private final String packageVersion;
-    public String getPackageVersion() { return packageVersion;  }
+
+    public String getPackageVersion() {
+        return packageVersion;
+    }
 
     private final String isolationLevel;
-    public String getIsolationLevel() { return isolationLevel; }
+
+    public String getIsolationLevel() {
+        return isolationLevel;
+    }
 
     private final boolean updateScript;
-    public boolean getUpdateScript() { return updateScript; }
+
+    public boolean getUpdateScript() {
+        return updateScript;
+    }
 
     @DataBoundConstructor
-    public SyncBuilder(String packageid, String serverName, String dbName, ServerAuth serverAuth, String options, String filter, String packageVersion, String isolationLevel, boolean updateScript) {
+    public SyncBuilder(
+        String packageid, String serverName, String dbName, ServerAuth serverAuth, String options, String filter,
+        String packageVersion, String isolationLevel, boolean updateScript) {
         this.packageid = packageid;
         this.serverName = serverName;
         this.dbName = dbName;
@@ -87,8 +107,9 @@ public class SyncBuilder extends Builder {
         ArrayList<String> params = new ArrayList<String>();
 
         String buildNumber = "1.0." + Integer.toString(build.getNumber());
-        if(getPackageVersion() != null && !getPackageVersion().isEmpty())
+        if (getPackageVersion() != null && !getPackageVersion().isEmpty()) {
             buildNumber = getPackageVersion();
+        }
 
         String packageFileName = Utils.constructPackageFileName(getPackageid(), buildNumber);
 
@@ -123,7 +144,7 @@ public class SyncBuilder extends Builder {
             params.add(getIsolationLevel());
         }
 
-        if(getUpdateScript()){
+        if (getUpdateScript()) {
             params.add("-scriptFile");
             params.add(getPackageid() + "." + buildNumber + ".sql");
         }
@@ -137,7 +158,7 @@ public class SyncBuilder extends Builder {
     // you don't have to do this.
     @Override
     public DescriptorImpl getDescriptor() {
-        return (DescriptorImpl)super.getDescriptor();
+        return (DescriptorImpl) super.getDescriptor();
     }
 
     /**
@@ -155,20 +176,24 @@ public class SyncBuilder extends Builder {
         }
 
         public FormValidation doCheckPackageid(@QueryParameter String packageid) throws IOException, ServletException {
-            if (packageid.length() == 0)
+            if (packageid.length() == 0) {
                 return FormValidation.error("Enter a package ID");
+            }
             return FormValidation.ok();
         }
 
         public FormValidation doCheckDbName(@QueryParameter String dbName) throws IOException, ServletException {
-            if (dbName.length() == 0)
+            if (dbName.length() == 0) {
                 return FormValidation.error("Enter a database name");
+            }
             return FormValidation.ok();
         }
 
-        public FormValidation doCheckServerName(@QueryParameter String serverName) throws IOException, ServletException {
-            if (serverName.length() == 0)
+        public FormValidation doCheckServerName(
+            @QueryParameter String serverName) throws IOException, ServletException {
+            if (serverName.length() == 0) {
                 return FormValidation.error("Enter a server name");
+            }
             return FormValidation.ok();
         }
 
@@ -189,7 +214,7 @@ public class SyncBuilder extends Builder {
             // To persist global configuration information,
             // set that to properties and call save().
             save();
-            return super.configure(req,formData);
+            return super.configure(req, formData);
         }
     }
 }
