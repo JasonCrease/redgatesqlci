@@ -13,9 +13,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import javax.servlet.ServletException;
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 
 public class PublishBuilder extends SqlContinuousIntegrationBuilder {
 
@@ -27,13 +26,13 @@ public class PublishBuilder extends SqlContinuousIntegrationBuilder {
 
     private final String nugetFeedUrl;
 
-    public String getNugetFeedUrl() {
+    private String getNugetFeedUrl() {
         return nugetFeedUrl;
     }
 
     private final String nugetFeedApiKey;
 
-    public String getNugetFeedApiKey() {
+    private String getNugetFeedApiKey() {
         return nugetFeedApiKey;
     }
 
@@ -44,7 +43,11 @@ public class PublishBuilder extends SqlContinuousIntegrationBuilder {
     }
 
     @DataBoundConstructor
-    public PublishBuilder(String packageid, String nugetFeedUrl, String nugetFeedApiKey, String packageVersion) {
+    public PublishBuilder(
+        final String packageid,
+        final String nugetFeedUrl,
+        final String nugetFeedApiKey,
+        final String packageVersion) {
         this.packageid = packageid;
         this.nugetFeedUrl = nugetFeedUrl;
         this.nugetFeedApiKey = nugetFeedApiKey;
@@ -52,15 +55,17 @@ public class PublishBuilder extends SqlContinuousIntegrationBuilder {
     }
 
     @Override
-    public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
-        ArrayList<String> params = new ArrayList<String>();
+    public boolean perform(final AbstractBuild build, final Launcher launcher, final BuildListener listener) {
+        final Collection<String> params = new ArrayList<>();
 
         String buildNumber = "1.0." + Integer.toString(build.getNumber());
         if (getPackageVersion() != null && !getPackageVersion().isEmpty()) {
             buildNumber = getPackageVersion();
         }
 
-        String packageFileName = SqlContinuousIntegrationBuilder.constructPackageFileName(getPackageid(), buildNumber);
+        final String packageFileName = SqlContinuousIntegrationBuilder.constructPackageFileName(
+            getPackageid(),
+            buildNumber);
 
         params.add("Publish");
         params.add("-package");
@@ -99,22 +104,22 @@ public class PublishBuilder extends SqlContinuousIntegrationBuilder {
             load();
         }
 
-        public FormValidation doCheckPackageid(@QueryParameter String value) throws IOException, ServletException {
-            if (value.length() == 0) {
+        public FormValidation doCheckPackageid(@QueryParameter final String value) {
+            if (value.isEmpty()) {
                 return FormValidation.error("Enter a package ID");
             }
             return FormValidation.ok();
         }
 
         public FormValidation doCheckNugetFeedUrl(
-            @QueryParameter String nugetFeedUrl) throws IOException, ServletException {
-            if (nugetFeedUrl.length() == 0) {
+            @QueryParameter final String nugetFeedUrl) {
+            if (nugetFeedUrl.isEmpty()) {
                 return FormValidation.error("Enter a NuGet package feed URL");
             }
             return FormValidation.ok();
         }
 
-        public boolean isApplicable(Class<? extends AbstractProject> aClass) {
+        public boolean isApplicable(final Class<? extends AbstractProject> aClass) {
             // Indicates that this builder can be used with all kinds of project types
             return true;
         }
@@ -127,7 +132,7 @@ public class PublishBuilder extends SqlContinuousIntegrationBuilder {
         }
 
         @Override
-        public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
+        public boolean configure(final StaplerRequest req, final JSONObject formData) throws FormException {
             // To persist global configuration information,
             // set that to properties and call save().
             save();

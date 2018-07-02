@@ -3,14 +3,14 @@ package redgatesqlci;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class GenerateTestData {
-    private String sqlgenPath;
+    private final String sqlgenPath;
 
-    public String getSqlgenPath() {
+    String getSqlgenPath() {
         return sqlgenPath;
     }
 
     @DataBoundConstructor
-    public GenerateTestData(String sqlgenPath) {
+    public GenerateTestData(final String sqlgenPath) {
         this.sqlgenPath = sqlgenPath;
     }
 }

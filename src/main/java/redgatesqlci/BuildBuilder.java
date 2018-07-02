@@ -14,23 +14,22 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import javax.servlet.ServletException;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 
 public class BuildBuilder extends SqlContinuousIntegrationBuilder {
 
-    private String dbFolder;
+    private final String dbFolder;
 
-    public String getDbFolder() {
+    private String getDbFolder() {
         return dbFolder;
     }
 
-    private String subfolder;
+    private final String subfolder;
 
-    public String getSubfolder() {
+    private String getSubfolder() {
         return subfolder;
     }
 
@@ -42,25 +41,25 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
 
     private final String tempServer;
 
-    public String getTempServer() {
+    private String getTempServer() {
         return tempServer;
     }
 
     private final String serverName;
 
-    public String getServerName() {
+    private String getServerName() {
         return serverName;
     }
 
     private final String dbName;
 
-    public String getDbName() {
+    private String getDbName() {
         return dbName;
     }
 
     private final String serverAuth;
 
-    public String getServerAuth() {
+    private String getServerAuth() {
         return serverAuth;
     }
 
@@ -96,75 +95,80 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
 
     private final boolean sendToDlmDashboard;
 
-    public boolean getSendToDlmDashboard() {
+    private boolean getSendToDlmDashboard() {
         return sendToDlmDashboard;
     }
 
     private final String dlmDashboardHost;
 
-    public String getDlmDashboardHost() {
+    private String getDlmDashboardHost() {
         return dlmDashboardHost;
     }
 
     private final String dlmDashboardPort;
 
-    public String getDlmDashboardPort() {
+    private String getDlmDashboardPort() {
         return dlmDashboardPort;
     }
 
 
     @DataBoundConstructor
     public BuildBuilder(
-        DbFolder dbFolder, String packageid, Server tempServer, String options, String filter, String packageVersion,
-        DlmDashboard dlmDashboard) {
+        final DbFolder dbFolder,
+        final String packageid,
+        final Server tempServer,
+        final String options,
+        final String filter,
+        final String packageVersion,
+        final DlmDashboard dlmDashboard) {
         this.dbFolder = dbFolder.getvalue();
-        this.subfolder = dbFolder.getsubfolder();
+        subfolder = dbFolder.getsubfolder();
         this.packageid = packageid;
         this.tempServer = tempServer.getvalue();
 
-        if (this.tempServer.equals("sqlServer")) {
-            this.dbName = tempServer.getDbName();
-            this.serverName = tempServer.getServerName();
-            this.serverAuth = tempServer.getServerAuth().getvalue();
-            this.username = tempServer.getServerAuth().getUsername();
-            this.password = tempServer.getServerAuth().getPassword();
+        if ("sqlServer".equals(this.tempServer)) {
+            dbName = tempServer.getDbName();
+            serverName = tempServer.getServerName();
+            serverAuth = tempServer.getServerAuth().getvalue();
+            username = tempServer.getServerAuth().getUsername();
+            password = tempServer.getServerAuth().getPassword();
         }
         else {
-            this.dbName = "";
-            this.serverName = "";
-            this.serverAuth = "";
-            this.username = "";
-            this.password = "";
+            dbName = "";
+            serverName = "";
+            serverAuth = "";
+            username = "";
+            password = "";
         }
 
         this.options = options;
         this.filter = filter;
         this.packageVersion = packageVersion;
 
-        this.sendToDlmDashboard = dlmDashboard != null;
+        sendToDlmDashboard = dlmDashboard != null;
         if (getSendToDlmDashboard()) {
-            this.dlmDashboardHost = dlmDashboard.getDlmDashboardHost();
-            this.dlmDashboardPort = dlmDashboard.getDlmDashboardPort();
+            dlmDashboardHost = dlmDashboard.getDlmDashboardHost();
+            dlmDashboardPort = dlmDashboard.getDlmDashboardPort();
         }
         else {
-            this.dlmDashboardHost = null;
-            this.dlmDashboardPort = null;
+            dlmDashboardHost = null;
+            dlmDashboardPort = null;
         }
     }
 
     @Override
-    public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
-        ArrayList<String> params = new ArrayList<String>();
+    public boolean perform(final AbstractBuild build, final Launcher launcher, final BuildListener listener) {
+        final Collection<String> params = new ArrayList<>();
 
-        FilePath checkOutPath = build.getWorkspace();
+        final FilePath checkOutPath = build.getWorkspace();
         if (checkOutPath == null) {
             return false;
         }
         params.add("Build");
 
-        if (getDbFolder().equals("subfolder")) {
+        if ("subfolder".equals(getDbFolder())) {
             params.add("-scriptsFolder");
-            Path path = Paths.get(checkOutPath.getRemote(), getSubfolder());
+            final Path path = Paths.get(checkOutPath.getRemote(), getSubfolder());
             params.add(path.toString());
         }
         else {
@@ -193,7 +197,7 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
             params.add(getFilter());
         }
 
-        if (getTempServer().equals("sqlServer")) {
+        if ("sqlServer".equals(getTempServer())) {
             params.add("-temporaryDatabaseServer");
             params.add(getServerName());
             if (!getDbName().isEmpty()) {
@@ -202,7 +206,7 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
             }
 
 
-            if (getServerAuth().equals("sqlServerAuth")) {
+            if ("sqlServerAuth".equals(getServerAuth())) {
                 params.add("-temporaryDatabaseUserName");
                 params.add(getUsername());
                 params.add("-temporaryDatabasePassword");
@@ -250,8 +254,8 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
             load();
         }
 
-        public FormValidation doCheckPackageid(@QueryParameter String value) throws IOException, ServletException {
-            if (value.length() == 0) {
+        public FormValidation doCheckPackageid(@QueryParameter final String value) {
+            if (value.isEmpty()) {
                 return FormValidation.error("Enter a package ID.");
             }
             return FormValidation.ok();
@@ -260,7 +264,7 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         // Since the AJAX callbacks don't give the value of radioblocks, I can't validate the value of the server and
         // database name fields.
 
-        public boolean isApplicable(Class<? extends AbstractProject> aClass) {
+        public boolean isApplicable(final Class<? extends AbstractProject> aClass) {
             // Indicates that this builder can be used with all kinds of project types 
             return true;
         }
@@ -273,7 +277,7 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         }
 
         @Override
-        public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
+        public boolean configure(final StaplerRequest req, final JSONObject formData) throws FormException {
             // To persist global configuration information,
             // set that to properties and call save().
             save();

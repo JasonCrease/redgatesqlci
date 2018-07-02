@@ -3,19 +3,19 @@ package redgatesqlci;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class RunTestSet {
-    private String value;
-    private String runOnlyParams;
+    private final String value;
+    private final String runOnlyParams;
 
     public String getvalue() {
         return value;
     }
 
-    public String getRunOnlyParams() {
+    String getRunOnlyParams() {
         return runOnlyParams;
     }
 
     @DataBoundConstructor
-    public RunTestSet(String value, String runOnlyParams) {
+    public RunTestSet(final String value, final String runOnlyParams) {
         this.value = value;
         this.runOnlyParams = runOnlyParams;
     }

@@ -13,9 +13,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import javax.servlet.ServletException;
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 
 public class TestBuilder extends SqlContinuousIntegrationBuilder {
 
@@ -27,25 +26,25 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
 
     private final String tempServer;
 
-    public String getTempServer() {
+    private String getTempServer() {
         return tempServer;
     }
 
     private final String serverName;
 
-    public String getServerName() {
+    private String getServerName() {
         return serverName;
     }
 
     private final String dbName;
 
-    public String getDbName() {
+    private String getDbName() {
         return dbName;
     }
 
     private final String serverAuth;
 
-    public String getServerAuth() {
+    private String getServerAuth() {
         return serverAuth;
     }
 
@@ -75,25 +74,25 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
 
     private final String runOnlyParams;
 
-    public String getRunOnlyParams() {
+    private String getRunOnlyParams() {
         return runOnlyParams;
     }
 
     private final String runTestSet;
 
-    public String getRunTestSet() {
+    private String getRunTestSet() {
         return runTestSet;
     }
 
     private final String generateTestData;
 
-    public String getGenerateTestData() {
+    private String getGenerateTestData() {
         return generateTestData;
     }
 
     private final String sqlgenPath;
 
-    public String getSqlgenPath() {
+    private String getSqlgenPath() {
         return sqlgenPath;
     }
 
@@ -105,41 +104,46 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
 
     @DataBoundConstructor
     public TestBuilder(
-        String packageid, Server tempServer, RunTestSet runTestSet, GenerateTestData generateTestData, String options,
-        String filter, String packageVersion) {
+        final String packageid,
+        final Server tempServer,
+        final RunTestSet runTestSet,
+        final GenerateTestData generateTestData,
+        final String options,
+        final String filter,
+        final String packageVersion) {
 
         this.packageid = packageid;
         this.tempServer = tempServer.getvalue();
         this.runTestSet = runTestSet.getvalue();
         this.generateTestData = generateTestData == null ? null : "true";
 
-        if (this.tempServer.equals("sqlServer")) {
-            this.dbName = tempServer.getDbName();
-            this.serverName = tempServer.getServerName();
-            this.serverAuth = tempServer.getServerAuth().getvalue();
-            this.username = tempServer.getServerAuth().getUsername();
-            this.password = tempServer.getServerAuth().getPassword();
+        if ("sqlServer".equals(this.tempServer)) {
+            dbName = tempServer.getDbName();
+            serverName = tempServer.getServerName();
+            serverAuth = tempServer.getServerAuth().getvalue();
+            username = tempServer.getServerAuth().getUsername();
+            password = tempServer.getServerAuth().getPassword();
         }
         else {
-            this.dbName = "";
-            this.serverName = "";
-            this.serverAuth = "";
-            this.username = "";
-            this.password = "";
+            dbName = "";
+            serverName = "";
+            serverAuth = "";
+            username = "";
+            password = "";
         }
 
-        if (this.runTestSet.equals("runOnlyTest")) {
-            this.runOnlyParams = runTestSet.getRunOnlyParams();
+        if ("runOnlyTest".equals(this.runTestSet)) {
+            runOnlyParams = runTestSet.getRunOnlyParams();
         }
         else {
-            this.runOnlyParams = "";
+            runOnlyParams = "";
         }
 
         if (this.generateTestData != null) {
-            this.sqlgenPath = generateTestData.getSqlgenPath();
+            sqlgenPath = generateTestData.getSqlgenPath();
         }
         else {
-            this.sqlgenPath = "";
+            sqlgenPath = "";
         }
 
         this.options = options;
@@ -148,21 +152,22 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
     }
 
     @Override
-    public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
-        ArrayList<String> params = new ArrayList<String>();
+    public boolean perform(final AbstractBuild build, final Launcher launcher, final BuildListener listener) {
+        final Collection<String> params = new ArrayList<>();
 
         String buildNumber = "1.0." + Integer.toString(build.getNumber());
         if (getPackageVersion() != null && !getPackageVersion().isEmpty()) {
             buildNumber = getPackageVersion();
         }
 
-        String packageFileName = SqlContinuousIntegrationBuilder.constructPackageFileName(getPackageid(), buildNumber);
+        final String packageFileName = SqlContinuousIntegrationBuilder
+            .constructPackageFileName(getPackageid(), buildNumber);
 
         params.add("Test");
         params.add("-package");
         params.add(packageFileName);
 
-        if (getTempServer().equals("sqlServer")) {
+        if ("sqlServer".equals(getTempServer())) {
             params.add("-temporaryDatabaseServer");
             params.add(getServerName());
             if (!getDbName().isEmpty()) {
@@ -170,7 +175,7 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
                 params.add(getDbName());
             }
 
-            if (getServerAuth().equals("sqlServerAuth")) {
+            if ("sqlServerAuth".equals(getServerAuth())) {
                 params.add("-temporaryDatabaseUserName");
                 params.add(getUsername());
                 params.add("-temporaryDatabasePassword");
@@ -178,7 +183,7 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
             }
         }
 
-        if (getRunTestSet().equals("runOnlyTest")) {
+        if ("runOnlyTest".equals(getRunTestSet())) {
             params.add("-runOnly");
             params.add(getRunOnlyParams());
         }
@@ -223,14 +228,15 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
             load();
         }
 
-        public FormValidation doCheckPackageid(@QueryParameter String packageid) throws IOException, ServletException {
-            if (packageid.length() == 0) {
+        public FormValidation doCheckPackageid(
+            @QueryParameter final String packageid) {
+            if (packageid.isEmpty()) {
                 return FormValidation.error("Enter a package ID");
             }
             return FormValidation.ok();
         }
 
-        public boolean isApplicable(Class<? extends AbstractProject> aClass) {
+        public boolean isApplicable(final Class<? extends AbstractProject> aClass) {
             // Indicates that this builder can be used with all kinds of project types
             return true;
         }
@@ -243,7 +249,7 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
         }
 
         @Override
-        public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
+        public boolean configure(final StaplerRequest req, final JSONObject formData) throws FormException {
             // To persist global configuration information,
             // set that to properties and call save().
             save();
