@@ -46,16 +46,6 @@ public class Utils {
             return false;
         }
 
-        // Set up arguments
-        ArrayList<String> procParams = new ArrayList<String>();
-        procParams.add(0, "\"" + getPowerShellExeLocation() + "\"");
-        procParams.add(1, "-NonInteractive");
-        procParams.add(2, "-ExecutionPolicy");
-        procParams.add(3, "Bypass");
-        procParams.add(4, "-File");
-        procParams.add(5, "\"" + sqlCiLocation + "\"");
-        procParams.add(6, "-Verbose");
-
         StringBuffer longStringBuffer = new StringBuffer();
 
         longStringBuffer.append("\"" + getPowerShellExeLocation() + "\" -NonInteractive -ExecutionPolicy Bypass -File \"" + sqlCiLocation + "\"" + " -Verbose");
@@ -77,7 +67,6 @@ public class Utils {
                 fixedParam = "\"" + fixedParam + "\"";
             }
 
-            procParams.add(param);
             longStringBuffer.append(" " + fixedParam);
         }
         String longString = longStringBuffer.toString();
