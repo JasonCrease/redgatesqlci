@@ -185,7 +185,7 @@ public class BuildBuilder extends Builder {
 
         if (!options.isEmpty()) {
             params.add("-Options");
-            params.add(Utils.getEscapedOptions(getOptions()));
+            params.add(getEscapedOptions(getOptions()));
         }
 
         if (!filter.isEmpty()) {
@@ -220,6 +220,13 @@ public class BuildBuilder extends Builder {
         return Utils.runSQLCIWithParams(build, launcher, listener, params);
     }
 
+    private static String getEscapedOptions(final String options) {
+        if (options.trim().startsWith("-")) {
+            final StringBuilder sb = new StringBuilder(options);
+            return sb.insert(0, ',').toString();
+        }
+        return options;
+    }
 
     // Overridden for better type safety.
     // If your plugin doesn't really define any property on Descriptor,

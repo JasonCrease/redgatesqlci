@@ -143,12 +143,4 @@ public class Utils {
 
         return "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe";
     }
-
-    static String getEscapedOptions(final String options) {
-        if (options.trim().startsWith("-")) {
-            final StringBuilder sb = new StringBuilder(options);
-            return sb.insert(0, ',').toString();
-        }
-        return options;
-    }
 }
