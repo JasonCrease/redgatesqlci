@@ -17,7 +17,7 @@ import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class TestBuilder extends Builder {
+public class TestBuilder extends SqlContinuousIntegrationBuilder {
 
     private final String packageid;
 
@@ -156,7 +156,7 @@ public class TestBuilder extends Builder {
             buildNumber = getPackageVersion();
         }
 
-        String packageFileName = Utils.constructPackageFileName(getPackageid(), buildNumber);
+        String packageFileName = SqlContinuousIntegrationBuilder.constructPackageFileName(getPackageid(), buildNumber);
 
         params.add("Test");
         params.add("-package");
@@ -197,7 +197,7 @@ public class TestBuilder extends Builder {
             params.add(getFilter());
         }
 
-        return Utils.runSQLCIWithParams(build, launcher, listener, params);
+        return runSQLCIWithParams(build, launcher, listener, params);
     }
 
 

@@ -17,7 +17,7 @@ import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class PublishBuilder extends Builder {
+public class PublishBuilder extends SqlContinuousIntegrationBuilder {
 
     private final String packageid;
 
@@ -60,7 +60,7 @@ public class PublishBuilder extends Builder {
             buildNumber = getPackageVersion();
         }
 
-        String packageFileName = Utils.constructPackageFileName(getPackageid(), buildNumber);
+        String packageFileName = SqlContinuousIntegrationBuilder.constructPackageFileName(getPackageid(), buildNumber);
 
         params.add("Publish");
         params.add("-package");
@@ -73,7 +73,7 @@ public class PublishBuilder extends Builder {
             params.add(getNugetFeedApiKey());
         }
 
-        return Utils.runSQLCIWithParams(build, launcher, listener, params);
+        return runSQLCIWithParams(build, launcher, listener, params);
     }
 
 

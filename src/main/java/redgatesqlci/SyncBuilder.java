@@ -17,7 +17,7 @@ import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class SyncBuilder extends Builder {
+public class SyncBuilder extends SqlContinuousIntegrationBuilder {
 
     private final String packageid;
 
@@ -111,7 +111,7 @@ public class SyncBuilder extends Builder {
             buildNumber = getPackageVersion();
         }
 
-        String packageFileName = Utils.constructPackageFileName(getPackageid(), buildNumber);
+        String packageFileName = SqlContinuousIntegrationBuilder.constructPackageFileName(getPackageid(), buildNumber);
 
         params.add("Sync");
         params.add("-package");
@@ -149,7 +149,7 @@ public class SyncBuilder extends Builder {
             params.add(getPackageid() + "." + buildNumber + ".sql");
         }
 
-        return Utils.runSQLCIWithParams(build, launcher, listener, params);
+        return runSQLCIWithParams(build, launcher, listener, params);
     }
 
 

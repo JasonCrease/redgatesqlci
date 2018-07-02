@@ -7,6 +7,7 @@ import hudson.Proc;
 import hudson.model.AbstractBuild;
 import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
+import hudson.tasks.Builder;
 import jenkins.security.MasterToSlaveCallable;
 
 import java.io.File;
@@ -14,8 +15,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Utils {
-    static boolean runSQLCIWithParams(
+public abstract class SqlContinuousIntegrationBuilder extends Builder {
+    boolean runSQLCIWithParams(
         final AbstractBuild<?, ?> build, final Launcher launcher, final TaskListener listener,
         final Iterable<String> params) {
         final VirtualChannel channel = launcher.getChannel();
@@ -73,7 +74,7 @@ public class Utils {
         final String longString = longStringBuilder.toString();
 
         // Run SQL CI with parameters. Send output and error streams to logger.Map<String, String> vars = new HashMap<String, String>();
-        final Map<String, String> vars = new HashMap<String, String>(build.getBuildVariables());
+        final Map<String, String> vars = new HashMap<>(build.getBuildVariables());
 
 
         final Proc proc;

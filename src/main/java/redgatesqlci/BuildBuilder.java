@@ -20,7 +20,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
-public class BuildBuilder extends Builder {
+public class BuildBuilder extends SqlContinuousIntegrationBuilder {
 
     private String dbFolder;
 
@@ -217,7 +217,7 @@ public class BuildBuilder extends Builder {
             params.add(getDlmDashboardPort());
         }
 
-        return Utils.runSQLCIWithParams(build, launcher, listener, params);
+        return runSQLCIWithParams(build, launcher, listener, params);
     }
 
     private static String getEscapedOptions(final String options) {
