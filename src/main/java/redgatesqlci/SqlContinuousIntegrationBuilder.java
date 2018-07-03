@@ -48,22 +48,11 @@ public abstract class SqlContinuousIntegrationBuilder extends Builder {
         }
 
         final String longString = generateCmdString(params, sqlCiLocation);
+        final Map<String, String> vars = getEnvironmentVariables(build, listener);
 
-        // Run SQL CI with parameters. Send output and error streams to logger.Map<String, String> vars = new HashMap<String, String>();
-        final Map<String, String> vars = new HashMap<>(build.getBuildVariables());
-
-
+        // Run SQL CI with parameters. Send output and error streams to logger.
         final Proc proc;
         final ProcStarter procStarter = launcher.new ProcStarter();
-
-        // Set process environment variables to system environment variables. This shouldn't be necessary!
-        final EnvVars envVars;
-        try {
-            envVars = build.getEnvironment(listener);
-            vars.putAll(envVars);
-        } catch (final IOException | InterruptedException ignored) {
-        }
-        vars.put("REDGATE_FUR_ENVIRONMENT", "Jenkins Plugin");
         procStarter.envs(vars);
 
         procStarter.cmdAsSingleString(longString).stdout(listener.getLogger()).stderr(listener.getLogger())
@@ -82,6 +71,21 @@ public abstract class SqlContinuousIntegrationBuilder extends Builder {
             listener.getLogger().println("InterruptedException");
             return false;
         }
+    }
+
+    private Map<String, String> getEnvironmentVariables(final AbstractBuild<?, ?> build, final TaskListener listener) {
+        final Map<String, String> vars = new HashMap<>(build.getBuildVariables());
+
+
+        // Set process environment variables to system environment variables. This shouldn't be necessary!
+        final EnvVars envVars;
+        try {
+            envVars = build.getEnvironment(listener);
+            vars.putAll(envVars);
+        } catch (final IOException | InterruptedException ignored) {
+        }
+        vars.put("REDGATE_FUR_ENVIRONMENT", "Jenkins Plugin");
+        return vars;
     }
 
     private String generateCmdString(final Iterable<String> params, final String sqlCiLocation) {
