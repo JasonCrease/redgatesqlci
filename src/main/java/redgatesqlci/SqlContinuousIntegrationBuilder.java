@@ -6,12 +6,12 @@ import hudson.Launcher.ProcStarter;
 import hudson.Proc;
 import hudson.model.AbstractBuild;
 import hudson.model.TaskListener;
-import hudson.remoting.VirtualChannel;
 import hudson.tasks.Builder;
-import jenkins.security.MasterToSlaveCallable;
 
-import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,36 +19,17 @@ abstract class SqlContinuousIntegrationBuilder extends Builder {
     boolean runSqlContinuousIntegrationCmdlet(
         final AbstractBuild<?, ?> build, final Launcher launcher, final TaskListener listener,
         final Iterable<String> params) {
-        final VirtualChannel channel = launcher.getChannel();
-
-        // Check SQL CI is installed and get location.
-        String sqlCiLocation = "";
-        final StringBuilder allLocations = new StringBuilder();
-        final String[] possibleSqlCiLocations =
-            new String[]{
-                getEnvironmentVariable("DLMAS_HOME", channel) + "\\sqlci.ps1",
-                getEnvironmentVariable("ProgramFiles", channel) + "\\Red Gate\\DLM Automation 2\\sqlci.ps1",
-                getEnvironmentVariable("ProgramFiles(X86)", channel) +
-                    "\\Red Gate\\DLM Automation 2\\sqlci.ps1",
-            };
-
-
-        for (final String possibleLocation : possibleSqlCiLocations) {
-            if (ciExists(possibleLocation, channel)) {
-                sqlCiLocation = possibleLocation;
-                break;
-            }
-            allLocations.append(possibleLocation).append("  ");
-        }
-
-        if (sqlCiLocation.isEmpty()) {
-            listener.error("SQLCI.ps1 cannot be found. Checked " + allLocations +
-                               ". Please install Redgate DLM Automation 2 on this agent.");
+        final String scaRunnerLocation;
+        try {
+            final URL scaRunnerUrl = getClass().getResource("/PowerShell/SqlChangeAutomationRunner.ps1");
+            scaRunnerLocation = Paths.get(scaRunnerUrl.toURI()).toAbsolutePath().toString();
+        } catch (final URISyntaxException e) {
+            listener.error("URI syntax error: " + e.getMessage());
             return false;
         }
 
         // Run SQL CI with parameters. Send output and error streams to logger.
-        final ProcStarter procStarter = defineProcess(build, launcher, listener, params, sqlCiLocation);
+        final ProcStarter procStarter = defineProcess(build, launcher, listener, params, scaRunnerLocation);
         return executeProcess(launcher, listener, procStarter);
     }
 
@@ -57,8 +38,8 @@ abstract class SqlContinuousIntegrationBuilder extends Builder {
         final Launcher launcher,
         final TaskListener listener,
         final Iterable<String> params,
-        final String sqlCiLocation) {
-        final String longString = generateCmdString(params, sqlCiLocation);
+        final String scaRunnerLocation) {
+        final String longString = generateCmdString(params, scaRunnerLocation);
         final Map<String, String> vars = getEnvironmentVariables(build, listener);
         final ProcStarter procStarter = launcher.new ProcStarter();
         procStarter.envs(vars);
@@ -131,30 +112,6 @@ abstract class SqlContinuousIntegrationBuilder extends Builder {
 
     static String constructPackageFileName(final String packageName, final String buildNumber) {
         return packageName + "." + buildNumber + ".nupkg";
-    }
-
-    private static String getEnvironmentVariable(final String variableName, final VirtualChannel channel) {
-        try {
-            return channel.call(new MasterToSlaveCallable<String, RuntimeException>() {
-                public String call() {
-                    return System.getenv(variableName);
-                }
-            });
-        } catch (final Exception e) {
-            return null;
-        }
-    }
-
-    private static boolean ciExists(final String possibleLocation, final VirtualChannel channel) {
-        try {
-            return channel.call(new MasterToSlaveCallable<Boolean, RuntimeException>() {
-                public Boolean call() {
-                    return new File(possibleLocation).isFile();
-                }
-            });
-        } catch (final Exception e) {
-            return false;
-        }
     }
 
     private static String getPowerShellExeLocation() {
