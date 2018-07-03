@@ -6,12 +6,10 @@ import hudson.Launcher.ProcStarter;
 import hudson.Proc;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
-import hudson.remoting.Callable;
 import hudson.remoting.VirtualChannel;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
@@ -47,8 +45,8 @@ public class SqlContinuousIntegrationBuilderTest {
     }
 
     @Test
-    public void executeWithMinimalConfigShouldSucceed() throws Throwable {
-        when(virtualChannel.call(Matchers.<Callable<?, ? extends Throwable>>any())).thenReturn(true);
+    public void executeWithMinimalConfigShouldSucceed() throws IOException, InterruptedException {
+        when(virtualChannel.call(any())).thenReturn(true);
         when(abstractBuild.getEnvironment(buildListener)).thenReturn(new EnvVars());
         when(process.join()).thenReturn(0);
 
