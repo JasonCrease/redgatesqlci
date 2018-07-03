@@ -15,7 +15,7 @@ public class SqlChangeAutomationVersionOption {
         return option;
     }
 
-    String getSpecificVersion() {
+    public String getSpecificVersion() {
         return specificVersion;
     }
 

@@ -87,11 +87,11 @@
   </f:section>
 
   <f:section title="SQL Change Automation version" >
-    <f:radioBlock name="sqlChangeAutomationVersionOption" title="Latest" value="Latest" checked="${instance.sqlChangeAutomationVersionOption == null || instance.sqlChangeAutomationVersionOption == 'Latest'}" />
-    <f:radioBlock name="sqlChangeAutomationVersionOption" title="Specific" value="Specific" checked="${!(instance.sqlChangeAutomationVersionOption == null || instance.sqlChangeAutomationVersionOption == 'Specific')}">
+    <f:radioBlock name="sqlChangeAutomationVersionOption" title="Latest" value="Latest" checked="${instance.getSqlChangeAutomationVersionOption() == null || instance.getSqlChangeAutomationVersionOption().getOption().name().equals('Latest')}" />
+    <f:radioBlock name="sqlChangeAutomationVersionOption" title="Specific" value="Specific" checked="${!(instance.getSqlChangeAutomationVersionOption() == null || instance.getSqlChangeAutomationVersionOption().getOption().name().equals('Latest'))}">
       <f:nested>
         <f:entry title="Specific version of SQL Change Automation to be used:" field="specificVersion">
-          <f:textbox/>
+          <f:textbox value="${instance.getSqlChangeAutomationVersionOption().getSpecificVersion()}"/>
         </f:entry>
       </f:nested>
     </f:radioBlock>

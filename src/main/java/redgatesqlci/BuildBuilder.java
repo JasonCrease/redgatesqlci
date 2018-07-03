@@ -19,17 +19,18 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 
+@SuppressWarnings({"unused", "WeakerAccess", "InstanceVariableOfConcreteClass"})
 public class BuildBuilder extends SqlContinuousIntegrationBuilder {
 
     private final String dbFolder;
 
-    private String getDbFolder() {
+    public String getDbFolder() {
         return dbFolder;
     }
 
     private final String subfolder;
 
-    private String getSubfolder() {
+    public String getSubfolder() {
         return subfolder;
     }
 
@@ -41,25 +42,25 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
 
     private final String tempServer;
 
-    private String getTempServer() {
+    public String getTempServer() {
         return tempServer;
     }
 
     private final String serverName;
 
-    private String getServerName() {
+    public String getServerName() {
         return serverName;
     }
 
     private final String dbName;
 
-    private String getDbName() {
+    public String getDbName() {
         return dbName;
     }
 
     private final String serverAuth;
 
-    private String getServerAuth() {
+    public String getServerAuth() {
         return serverAuth;
     }
 
@@ -95,23 +96,27 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
 
     private final boolean sendToDlmDashboard;
 
-    private boolean getSendToDlmDashboard() {
+    public boolean getSendToDlmDashboard() {
         return sendToDlmDashboard;
     }
 
     private final String dlmDashboardHost;
 
-    private String getDlmDashboardHost() {
+    public String getDlmDashboardHost() {
         return dlmDashboardHost;
     }
 
     private final String dlmDashboardPort;
 
-    private String getDlmDashboardPort() {
+    public String getDlmDashboardPort() {
         return dlmDashboardPort;
     }
 
     private final SqlChangeAutomationVersionOption sqlChangeAutomationVersionOption;
+
+    public SqlChangeAutomationVersionOption getSqlChangeAutomationVersionOption() {
+        return sqlChangeAutomationVersionOption;
+    }
 
     @DataBoundConstructor
     public BuildBuilder(
@@ -139,7 +144,7 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         else {
             dbName = "";
             serverName = "";
-            serverAuth = "";
+            serverAuth = null;
             username = "";
             password = "";
         }
