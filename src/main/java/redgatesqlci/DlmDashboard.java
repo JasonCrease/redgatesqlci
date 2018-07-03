@@ -2,20 +2,21 @@ package redgatesqlci;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
-public class DlmDashboard
-{
-    private String dlmDashboardHost;
-    private String dlmDashboardPort;
+public class DlmDashboard {
+    private final String dlmDashboardHost;
+    private final String dlmDashboardPort;
 
-    public String getDlmDashboardHost() {
+    String getDlmDashboardHost() {
         return dlmDashboardHost;
     }
-    public String getDlmDashboardPort() { return dlmDashboardPort; }
+
+    String getDlmDashboardPort() {
+        return dlmDashboardPort;
+    }
 
 
     @DataBoundConstructor
-    public DlmDashboard(String dlmDashboardHost, String dlmDashboardPort)
-    {
+    public DlmDashboard(final String dlmDashboardHost, final String dlmDashboardPort) {
         this.dlmDashboardHost = dlmDashboardHost;
         this.dlmDashboardPort = dlmDashboardPort;
     }

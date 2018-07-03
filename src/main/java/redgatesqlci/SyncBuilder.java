@@ -1,7 +1,6 @@
 package redgatesqlci;
 
 import hudson.Extension;
-import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
@@ -14,67 +13,94 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import javax.servlet.ServletException;
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 
-public class SyncBuilder extends Builder {
+public class SyncBuilder extends SqlContinuousIntegrationBuilder {
 
     private final String packageid;
+
     public String getPackageid() {
         return packageid;
     }
 
     private final String serverName;
-    public String getServerName() {
+
+    private String getServerName() {
         return serverName;
     }
 
     private final String dbName;
-    public String getDbName() {
+
+    private String getDbName() {
         return dbName;
     }
 
     private final String serverAuth;
-    public String getServerAuth() {
+
+    private String getServerAuth() {
         return serverAuth;
     }
 
     private final String username;
+
     public String getUsername() {
         return username;
     }
 
     private final String password;
+
     public String getPassword() {
         return password;
     }
 
     private final String options;
+
     public String getOptions() {
         return options;
     }
 
     private final String filter;
-    public String getFilter() { return filter; }
+
+    public String getFilter() {
+        return filter;
+    }
 
     private final String packageVersion;
-    public String getPackageVersion() { return packageVersion;  }
+
+    public String getPackageVersion() {
+        return packageVersion;
+    }
 
     private final String isolationLevel;
-    public String getIsolationLevel() { return isolationLevel; }
+
+    private String getIsolationLevel() {
+        return isolationLevel;
+    }
 
     private final boolean updateScript;
-    public boolean getUpdateScript() { return updateScript; }
+
+    private boolean getUpdateScript() {
+        return updateScript;
+    }
 
     @DataBoundConstructor
-    public SyncBuilder(String packageid, String serverName, String dbName, ServerAuth serverAuth, String options, String filter, String packageVersion, String isolationLevel, boolean updateScript) {
+    public SyncBuilder(
+        final String packageid,
+        final String serverName,
+        final String dbName,
+        final ServerAuth serverAuth,
+        final String options,
+        final String filter,
+        final String packageVersion,
+        final String isolationLevel,
+        final boolean updateScript) {
         this.packageid = packageid;
         this.serverName = serverName;
         this.dbName = dbName;
         this.serverAuth = serverAuth.getvalue();
-        this.username = serverAuth.getUsername();
-        this.password = serverAuth.getPassword();
+        username = serverAuth.getUsername();
+        password = serverAuth.getPassword();
         this.options = options;
         this.filter = filter;
         this.packageVersion = packageVersion;
@@ -83,14 +109,17 @@ public class SyncBuilder extends Builder {
     }
 
     @Override
-    public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
-        ArrayList<String> params = new ArrayList<String>();
+    public boolean perform(final AbstractBuild build, final Launcher launcher, final BuildListener listener) {
+        final Collection<String> params = new ArrayList<>();
 
         String buildNumber = "1.0." + Integer.toString(build.getNumber());
-        if(getPackageVersion() != null && !getPackageVersion().isEmpty())
+        if (getPackageVersion() != null && !getPackageVersion().isEmpty()) {
             buildNumber = getPackageVersion();
+        }
 
-        String packageFileName = Utils.constructPackageFileName(getPackageid(), buildNumber);
+        final String packageFileName = SqlContinuousIntegrationBuilder.constructPackageFileName(
+            getPackageid(),
+            buildNumber);
 
         params.add("Sync");
         params.add("-package");
@@ -101,7 +130,7 @@ public class SyncBuilder extends Builder {
         params.add("-databaseName");
         params.add(getDbName());
 
-        if (getServerAuth().equals("sqlServerAuth")) {
+        if ("sqlServerAuth".equals(getServerAuth())) {
             params.add("-databaseUserName");
             params.add(getUsername());
             params.add("-databasePassword");
@@ -123,12 +152,12 @@ public class SyncBuilder extends Builder {
             params.add(getIsolationLevel());
         }
 
-        if(getUpdateScript()){
+        if (getUpdateScript()) {
             params.add("-scriptFile");
             params.add(getPackageid() + "." + buildNumber + ".sql");
         }
 
-        return Utils.runSQLCIWithParams(build, launcher, listener, params);
+        return runSqlContinuousIntegrationCmdlet(build, launcher, listener, params);
     }
 
 
@@ -137,7 +166,7 @@ public class SyncBuilder extends Builder {
     // you don't have to do this.
     @Override
     public DescriptorImpl getDescriptor() {
-        return (DescriptorImpl)super.getDescriptor();
+        return (DescriptorImpl) super.getDescriptor();
     }
 
     /**
@@ -154,25 +183,29 @@ public class SyncBuilder extends Builder {
             load();
         }
 
-        public FormValidation doCheckPackageid(@QueryParameter String packageid) throws IOException, ServletException {
-            if (packageid.length() == 0)
+        public FormValidation doCheckPackageid(@QueryParameter final String packageid) {
+            if (packageid.isEmpty()) {
                 return FormValidation.error("Enter a package ID");
+            }
             return FormValidation.ok();
         }
 
-        public FormValidation doCheckDbName(@QueryParameter String dbName) throws IOException, ServletException {
-            if (dbName.length() == 0)
+        public FormValidation doCheckDbName(@QueryParameter final String dbName) {
+            if (dbName.isEmpty()) {
                 return FormValidation.error("Enter a database name");
+            }
             return FormValidation.ok();
         }
 
-        public FormValidation doCheckServerName(@QueryParameter String serverName) throws IOException, ServletException {
-            if (serverName.length() == 0)
+        public FormValidation doCheckServerName(
+            @QueryParameter final String serverName) {
+            if (serverName.isEmpty()) {
                 return FormValidation.error("Enter a server name");
+            }
             return FormValidation.ok();
         }
 
-        public boolean isApplicable(Class<? extends AbstractProject> aClass) {
+        public boolean isApplicable(final Class<? extends AbstractProject> aClass) {
             // Indicates that this builder can be used with all kinds of project types
             return true;
         }
@@ -185,11 +218,11 @@ public class SyncBuilder extends Builder {
         }
 
         @Override
-        public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
+        public boolean configure(final StaplerRequest req, final JSONObject formData) throws FormException {
             // To persist global configuration information,
             // set that to properties and call save().
             save();
-            return super.configure(req,formData);
+            return super.configure(req, formData);
         }
     }
 }
