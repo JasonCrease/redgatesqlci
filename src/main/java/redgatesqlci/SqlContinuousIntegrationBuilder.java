@@ -74,6 +74,9 @@ abstract class SqlContinuousIntegrationBuilder extends Builder {
 
             longStringBuilder.append(" ").append(fixedParam);
         }
+
+        longStringBuilder.append(" -RequiredProductVersion Latest");
+
         return longStringBuilder.toString();
     }
 
