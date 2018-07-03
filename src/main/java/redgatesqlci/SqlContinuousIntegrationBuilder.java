@@ -47,31 +47,7 @@ public abstract class SqlContinuousIntegrationBuilder extends Builder {
             return false;
         }
 
-        final StringBuilder longStringBuilder = new StringBuilder();
-
-        longStringBuilder.append("\"").append(getPowerShellExeLocation())
-                         .append("\" -NonInteractive -ExecutionPolicy Bypass -File \"").append(sqlCiLocation)
-                         .append("\"").append(" -Verbose");
-
-        // Here we do some parameter fiddling. Existing quotes must be escaped with three slashes
-        // Then, we need to surround the part on the right of the = with quotes iff it has a space.
-        for (final String param : params) {
-            // Trailing spaces can be a problem, so trim string.
-            String fixedParam = param.trim();
-
-            // Put 3 slashes before quotes (argh!!!!)
-            if (fixedParam.contains("\"")) {
-                fixedParam = fixedParam.replace("\"", "\\\\\\\"");
-            }
-
-            // If there are spaces, surround bit after = with quotes
-            if (fixedParam.contains(" ")) {
-                fixedParam = "\"" + fixedParam + "\"";
-            }
-
-            longStringBuilder.append(" ").append(fixedParam);
-        }
-        final String longString = longStringBuilder.toString();
+        final String longString = generateCmdString(params, sqlCiLocation);
 
         // Run SQL CI with parameters. Send output and error streams to logger.Map<String, String> vars = new HashMap<String, String>();
         final Map<String, String> vars = new HashMap<>(build.getBuildVariables());
@@ -106,6 +82,34 @@ public abstract class SqlContinuousIntegrationBuilder extends Builder {
             listener.getLogger().println("InterruptedException");
             return false;
         }
+    }
+
+    private String generateCmdString(final Iterable<String> params, final String sqlCiLocation) {
+        final StringBuilder longStringBuilder = new StringBuilder();
+
+        longStringBuilder.append("\"").append(getPowerShellExeLocation())
+                         .append("\" -NonInteractive -ExecutionPolicy Bypass -File \"").append(sqlCiLocation)
+                         .append("\"").append(" -Verbose");
+
+        // Here we do some parameter fiddling. Existing quotes must be escaped with three slashes
+        // Then, we need to surround the part on the right of the = with quotes iff it has a space.
+        for (final String param : params) {
+            // Trailing spaces can be a problem, so trim string.
+            String fixedParam = param.trim();
+
+            // Put 3 slashes before quotes (argh!!!!)
+            if (fixedParam.contains("\"")) {
+                fixedParam = fixedParam.replace("\"", "\\\\\\\"");
+            }
+
+            // If there are spaces, surround bit after = with quotes
+            if (fixedParam.contains(" ")) {
+                fixedParam = "\"" + fixedParam + "\"";
+            }
+
+            longStringBuilder.append(" ").append(fixedParam);
+        }
+        return longStringBuilder.toString();
     }
 
     static String constructPackageFileName(final String packageName, final String buildNumber) {
