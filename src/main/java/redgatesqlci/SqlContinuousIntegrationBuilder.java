@@ -49,21 +49,23 @@ public abstract class SqlContinuousIntegrationBuilder extends Builder {
 
         // Run SQL CI with parameters. Send output and error streams to logger.
         final ProcStarter procStarter = defineProcess(build, launcher, listener, params, sqlCiLocation);
+        return executeProcess(launcher, listener, procStarter);
+    }
 
-        final Proc proc;
-        try {
-            proc = launcher.launch(procStarter);
-            final int exitCode = proc.join();
-            return exitCode == 0;
-        } catch (final IOException e) {
-            e.printStackTrace();
-            listener.getLogger().println("IOException");
-            return false;
-        } catch (final InterruptedException e) {
-            e.printStackTrace();
-            listener.getLogger().println("InterruptedException");
-            return false;
-        }
+    private ProcStarter defineProcess(
+        final AbstractBuild<?, ?> build,
+        final Launcher launcher,
+        final TaskListener listener,
+        final Iterable<String> params,
+        final String sqlCiLocation) {
+        final String longString = generateCmdString(params, sqlCiLocation);
+        final Map<String, String> vars = getEnvironmentVariables(build, listener);
+        final ProcStarter procStarter = launcher.new ProcStarter();
+        procStarter.envs(vars);
+
+        procStarter.cmdAsSingleString(longString).stdout(listener.getLogger()).stderr(listener.getLogger())
+                   .pwd(build.getWorkspace());
+        return procStarter;
     }
 
     private String generateCmdString(final Iterable<String> params, final String sqlCiLocation) {
@@ -109,20 +111,24 @@ public abstract class SqlContinuousIntegrationBuilder extends Builder {
         return vars;
     }
 
-    private ProcStarter defineProcess(
-        final AbstractBuild<?, ?> build,
+    private boolean executeProcess(
         final Launcher launcher,
         final TaskListener listener,
-        final Iterable<String> params,
-        final String sqlCiLocation) {
-        final String longString = generateCmdString(params, sqlCiLocation);
-        final Map<String, String> vars = getEnvironmentVariables(build, listener);
-        final ProcStarter procStarter = launcher.new ProcStarter();
-        procStarter.envs(vars);
-
-        procStarter.cmdAsSingleString(longString).stdout(listener.getLogger()).stderr(listener.getLogger())
-                   .pwd(build.getWorkspace());
-        return procStarter;
+        final ProcStarter procStarter) {
+        final Proc proc;
+        try {
+            proc = launcher.launch(procStarter);
+            final int exitCode = proc.join();
+            return exitCode == 0;
+        } catch (final IOException e) {
+            e.printStackTrace();
+            listener.getLogger().println("IOException");
+            return false;
+        } catch (final InterruptedException e) {
+            e.printStackTrace();
+            listener.getLogger().println("InterruptedException");
+            return false;
+        }
     }
 
     static String constructPackageFileName(final String packageName, final String buildNumber) {
