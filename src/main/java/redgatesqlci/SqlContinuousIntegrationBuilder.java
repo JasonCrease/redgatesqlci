@@ -15,8 +15,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class SqlContinuousIntegrationBuilder extends Builder {
-    boolean runSQLCIWithParams(
+abstract class SqlContinuousIntegrationBuilder extends Builder {
+    boolean runSqlContinuousIntegrationCmdlet(
         final AbstractBuild<?, ?> build, final Launcher launcher, final TaskListener listener,
         final Iterable<String> params) {
         final VirtualChannel channel = launcher.getChannel();
@@ -121,12 +121,10 @@ public abstract class SqlContinuousIntegrationBuilder extends Builder {
             final int exitCode = proc.join();
             return exitCode == 0;
         } catch (final IOException e) {
-            e.printStackTrace();
-            listener.getLogger().println("IOException");
+            listener.error("Unexpected I/O exception executing cmdlet: " + e.getMessage());
             return false;
         } catch (final InterruptedException e) {
-            e.printStackTrace();
-            listener.getLogger().println("InterruptedException");
+            listener.error("Unexpected thread interruption executing cmdlet");
             return false;
         }
     }
