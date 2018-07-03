@@ -157,7 +157,7 @@ public class SyncBuilder extends SqlContinuousIntegrationBuilder {
             params.add(getPackageid() + "." + buildNumber + ".sql");
         }
 
-        return runSQLCIWithParams(build, launcher, listener, params);
+        return runSqlContinuousIntegrationCmdlet(build, launcher, listener, params);
     }
 
 

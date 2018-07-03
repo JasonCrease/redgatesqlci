@@ -202,7 +202,7 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
             params.add(getFilter());
         }
 
-        return runSQLCIWithParams(build, launcher, listener, params);
+        return runSqlContinuousIntegrationCmdlet(build, launcher, listener, params);
     }
 
 

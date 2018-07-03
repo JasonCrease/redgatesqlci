@@ -78,7 +78,7 @@ public class PublishBuilder extends SqlContinuousIntegrationBuilder {
             params.add(getNugetFeedApiKey());
         }
 
-        return runSQLCIWithParams(build, launcher, listener, params);
+        return runSqlContinuousIntegrationCmdlet(build, launcher, listener, params);
     }
 
 

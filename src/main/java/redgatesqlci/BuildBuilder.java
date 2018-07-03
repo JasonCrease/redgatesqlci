@@ -221,7 +221,7 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
             params.add(getDlmDashboardPort());
         }
 
-        return runSQLCIWithParams(build, launcher, listener, params);
+        return runSqlContinuousIntegrationCmdlet(build, launcher, listener, params);
     }
 
     private static String getEscapedOptions(final String options) {

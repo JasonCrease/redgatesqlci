@@ -58,7 +58,7 @@ public class SqlContinuousIntegrationBuilderTest {
                 final AbstractBuild<?, ?> build,
                 final Launcher launcher,
                 final BuildListener listener) {
-                return runSQLCIWithParams(build, launcher, listener, Collections.singletonList("-someParam someValue"));
+                return runSqlContinuousIntegrationCmdlet(build, launcher, listener, Collections.singletonList("-someParam someValue"));
             }
         };
 
