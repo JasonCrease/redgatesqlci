@@ -6,12 +6,9 @@ import hudson.Launcher.ProcStarter;
 import hudson.Proc;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
-import hudson.remoting.Callable;
-import hudson.remoting.VirtualChannel;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
@@ -29,9 +26,6 @@ public class SqlContinuousIntegrationBuilderTest {
     private AbstractBuild<?, ?> abstractBuild;
 
     @Mock
-    private VirtualChannel virtualChannel;
-
-    @Mock
     private Launcher launcher;
 
     @Mock
@@ -42,13 +36,11 @@ public class SqlContinuousIntegrationBuilderTest {
 
     @Before
     public void SetUp() throws IOException {
-        when(launcher.getChannel()).thenReturn(virtualChannel);
         when(launcher.launch(any(ProcStarter.class))).thenReturn(process);
     }
 
     @Test
-    public void executeWithMinimalConfigShouldSucceed() throws Throwable {
-        when(virtualChannel.call(Matchers.<Callable<?, ? extends Throwable>>any())).thenReturn(true);
+    public void executeWithMinimalConfigShouldSucceed() throws IOException, InterruptedException {
         when(abstractBuild.getEnvironment(buildListener)).thenReturn(new EnvVars());
         when(process.join()).thenReturn(0);
 
@@ -58,7 +50,11 @@ public class SqlContinuousIntegrationBuilderTest {
                 final AbstractBuild<?, ?> build,
                 final Launcher launcher,
                 final BuildListener listener) {
-                return runSqlContinuousIntegrationCmdlet(build, launcher, listener, Collections.singletonList("-someParam someValue"));
+                return runSqlContinuousIntegrationCmdlet(
+                    build,
+                    launcher,
+                    listener,
+                    Collections.singletonList("-someParam someValue"));
             }
         };
 

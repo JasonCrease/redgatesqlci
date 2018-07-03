@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>2.5</version>
+    <version>3.17</version>
   </parent>
 
   <groupId>com.redgate.plugins.redgatesqlci</groupId>
@@ -37,6 +37,7 @@
   </developers>
 
   <properties>
+    <java.level>8</java.level>
     <!-- Baseline Jenkins version you use to build and test the plugin. Users must have this version or newer to run. -->
     <jenkins.version>1.580.1</jenkins.version>
   </properties>

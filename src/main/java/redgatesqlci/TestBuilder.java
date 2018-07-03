@@ -16,6 +16,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import java.util.ArrayList;
 import java.util.Collection;
 
+@SuppressWarnings({"WeakerAccess", "InstanceVariableOfConcreteClass", "unused"})
 public class TestBuilder extends SqlContinuousIntegrationBuilder {
 
     private final String packageid;
@@ -26,25 +27,25 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
 
     private final String tempServer;
 
-    private String getTempServer() {
+    public String getTempServer() {
         return tempServer;
     }
 
     private final String serverName;
 
-    private String getServerName() {
+    public String getServerName() {
         return serverName;
     }
 
     private final String dbName;
 
-    private String getDbName() {
+    public String getDbName() {
         return dbName;
     }
 
     private final String serverAuth;
 
-    private String getServerAuth() {
+    public String getServerAuth() {
         return serverAuth;
     }
 
@@ -74,25 +75,25 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
 
     private final String runOnlyParams;
 
-    private String getRunOnlyParams() {
+    public String getRunOnlyParams() {
         return runOnlyParams;
     }
 
     private final String runTestSet;
 
-    private String getRunTestSet() {
+    public String getRunTestSet() {
         return runTestSet;
     }
 
     private final String generateTestData;
 
-    private String getGenerateTestData() {
+    public String getGenerateTestData() {
         return generateTestData;
     }
 
     private final String sqlgenPath;
 
-    private String getSqlgenPath() {
+    public String getSqlgenPath() {
         return sqlgenPath;
     }
 
@@ -100,6 +101,12 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
 
     public String getPackageVersion() {
         return packageVersion;
+    }
+
+    private final SqlChangeAutomationVersionOption sqlChangeAutomationVersionOption;
+
+    public SqlChangeAutomationVersionOption getSqlChangeAutomationVersionOption() {
+        return sqlChangeAutomationVersionOption;
     }
 
     @DataBoundConstructor
@@ -110,12 +117,14 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
         final GenerateTestData generateTestData,
         final String options,
         final String filter,
-        final String packageVersion) {
+        final String packageVersion,
+        final SqlChangeAutomationVersionOption sqlChangeAutomationVersionOption) {
 
         this.packageid = packageid;
         this.tempServer = tempServer.getvalue();
         this.runTestSet = runTestSet.getvalue();
         this.generateTestData = generateTestData == null ? null : "true";
+        this.sqlChangeAutomationVersionOption = sqlChangeAutomationVersionOption;
 
         if ("sqlServer".equals(this.tempServer)) {
             dbName = tempServer.getDbName();
@@ -127,7 +136,7 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
         else {
             dbName = "";
             serverName = "";
-            serverAuth = "";
+            serverAuth = null;
             username = "";
             password = "";
         }
@@ -201,6 +210,8 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
             params.add("-filter");
             params.add(getFilter());
         }
+
+        addProductVersionParameter(params, sqlChangeAutomationVersionOption);
 
         return runSqlContinuousIntegrationCmdlet(build, launcher, listener, params);
     }

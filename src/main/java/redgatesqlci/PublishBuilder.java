@@ -16,6 +16,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import java.util.ArrayList;
 import java.util.Collection;
 
+@SuppressWarnings({"WeakerAccess", "InstanceVariableOfConcreteClass", "unused"})
 public class PublishBuilder extends SqlContinuousIntegrationBuilder {
 
     private final String packageid;
@@ -26,13 +27,13 @@ public class PublishBuilder extends SqlContinuousIntegrationBuilder {
 
     private final String nugetFeedUrl;
 
-    private String getNugetFeedUrl() {
+    public String getNugetFeedUrl() {
         return nugetFeedUrl;
     }
 
     private final String nugetFeedApiKey;
 
-    private String getNugetFeedApiKey() {
+    public String getNugetFeedApiKey() {
         return nugetFeedApiKey;
     }
 
@@ -42,16 +43,24 @@ public class PublishBuilder extends SqlContinuousIntegrationBuilder {
         return packageVersion;
     }
 
+    private final SqlChangeAutomationVersionOption sqlChangeAutomationVersionOption;
+
+    public SqlChangeAutomationVersionOption getSqlChangeAutomationVersionOption() {
+        return sqlChangeAutomationVersionOption;
+    }
+
     @DataBoundConstructor
     public PublishBuilder(
         final String packageid,
         final String nugetFeedUrl,
         final String nugetFeedApiKey,
-        final String packageVersion) {
+        final String packageVersion,
+        final SqlChangeAutomationVersionOption sqlChangeAutomationVersionOption) {
         this.packageid = packageid;
         this.nugetFeedUrl = nugetFeedUrl;
         this.nugetFeedApiKey = nugetFeedApiKey;
         this.packageVersion = packageVersion;
+        this.sqlChangeAutomationVersionOption = sqlChangeAutomationVersionOption;
     }
 
     @Override
@@ -77,6 +86,8 @@ public class PublishBuilder extends SqlContinuousIntegrationBuilder {
             params.add("-nugetFeedApiKey");
             params.add(getNugetFeedApiKey());
         }
+
+        addProductVersionParameter(params, sqlChangeAutomationVersionOption);
 
         return runSqlContinuousIntegrationCmdlet(build, launcher, listener, params);
     }

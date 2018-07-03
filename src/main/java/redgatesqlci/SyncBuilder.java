@@ -16,6 +16,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import java.util.ArrayList;
 import java.util.Collection;
 
+@SuppressWarnings({"InstanceVariableOfConcreteClass", "WeakerAccess", "unused"})
 public class SyncBuilder extends SqlContinuousIntegrationBuilder {
 
     private final String packageid;
@@ -26,19 +27,19 @@ public class SyncBuilder extends SqlContinuousIntegrationBuilder {
 
     private final String serverName;
 
-    private String getServerName() {
+    public String getServerName() {
         return serverName;
     }
 
     private final String dbName;
 
-    private String getDbName() {
+    public String getDbName() {
         return dbName;
     }
 
     private final String serverAuth;
 
-    private String getServerAuth() {
+    public String getServerAuth() {
         return serverAuth;
     }
 
@@ -74,14 +75,20 @@ public class SyncBuilder extends SqlContinuousIntegrationBuilder {
 
     private final String isolationLevel;
 
-    private String getIsolationLevel() {
+    public String getIsolationLevel() {
         return isolationLevel;
     }
 
     private final boolean updateScript;
 
-    private boolean getUpdateScript() {
+    public boolean getUpdateScript() {
         return updateScript;
+    }
+
+    private final SqlChangeAutomationVersionOption sqlChangeAutomationVersionOption;
+
+    public SqlChangeAutomationVersionOption getSqlChangeAutomationVersionOption() {
+        return sqlChangeAutomationVersionOption;
     }
 
     @DataBoundConstructor
@@ -94,7 +101,8 @@ public class SyncBuilder extends SqlContinuousIntegrationBuilder {
         final String filter,
         final String packageVersion,
         final String isolationLevel,
-        final boolean updateScript) {
+        final boolean updateScript,
+        final SqlChangeAutomationVersionOption sqlChangeAutomationVersionOption) {
         this.packageid = packageid;
         this.serverName = serverName;
         this.dbName = dbName;
@@ -106,6 +114,7 @@ public class SyncBuilder extends SqlContinuousIntegrationBuilder {
         this.packageVersion = packageVersion;
         this.isolationLevel = isolationLevel;
         this.updateScript = updateScript;
+        this.sqlChangeAutomationVersionOption = sqlChangeAutomationVersionOption;
     }
 
     @Override
@@ -156,6 +165,8 @@ public class SyncBuilder extends SqlContinuousIntegrationBuilder {
             params.add("-scriptFile");
             params.add(getPackageid() + "." + buildNumber + ".sql");
         }
+
+        addProductVersionParameter(params, sqlChangeAutomationVersionOption);
 
         return runSqlContinuousIntegrationCmdlet(build, launcher, listener, params);
     }
