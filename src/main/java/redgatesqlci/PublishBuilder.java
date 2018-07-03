@@ -42,16 +42,20 @@ public class PublishBuilder extends SqlContinuousIntegrationBuilder {
         return packageVersion;
     }
 
+    private final SqlChangeAutomationVersionOption sqlChangeAutomationVersionOption;
+
     @DataBoundConstructor
     public PublishBuilder(
         final String packageid,
         final String nugetFeedUrl,
         final String nugetFeedApiKey,
-        final String packageVersion) {
+        final String packageVersion,
+        final SqlChangeAutomationVersionOption sqlChangeAutomationVersionOption) {
         this.packageid = packageid;
         this.nugetFeedUrl = nugetFeedUrl;
         this.nugetFeedApiKey = nugetFeedApiKey;
         this.packageVersion = packageVersion;
+        this.sqlChangeAutomationVersionOption = sqlChangeAutomationVersionOption;
     }
 
     @Override
@@ -77,6 +81,8 @@ public class PublishBuilder extends SqlContinuousIntegrationBuilder {
             params.add("-nugetFeedApiKey");
             params.add(getNugetFeedApiKey());
         }
+
+        addProductVersionParameter(params, sqlChangeAutomationVersionOption);
 
         return runSqlContinuousIntegrationCmdlet(build, launcher, listener, params);
     }

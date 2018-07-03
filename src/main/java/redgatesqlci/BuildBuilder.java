@@ -111,6 +111,7 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         return dlmDashboardPort;
     }
 
+    private final SqlChangeAutomationVersionOption sqlChangeAutomationVersionOption;
 
     @DataBoundConstructor
     public BuildBuilder(
@@ -120,11 +121,13 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         final String options,
         final String filter,
         final String packageVersion,
-        final DlmDashboard dlmDashboard) {
+        final DlmDashboard dlmDashboard,
+        final SqlChangeAutomationVersionOption sqlChangeAutomationVersionOption) {
         this.dbFolder = dbFolder.getvalue();
         subfolder = dbFolder.getsubfolder();
         this.packageid = packageid;
         this.tempServer = tempServer.getvalue();
+        this.sqlChangeAutomationVersionOption = sqlChangeAutomationVersionOption;
 
         if ("sqlServer".equals(this.tempServer)) {
             dbName = tempServer.getDbName();
@@ -220,6 +223,8 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
             params.add("-dlmDashboardPort");
             params.add(getDlmDashboardPort());
         }
+
+        addProductVersionParameter(params, sqlChangeAutomationVersionOption);
 
         return runSqlContinuousIntegrationCmdlet(build, launcher, listener, params);
     }

@@ -7,15 +7,30 @@ import hudson.Proc;
 import hudson.model.AbstractBuild;
 import hudson.model.TaskListener;
 import hudson.tasks.Builder;
+import redgatesqlci.SqlChangeAutomationVersionOption.ProductVersionOption;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 abstract class SqlContinuousIntegrationBuilder extends Builder {
+    void addProductVersionParameter(
+        final Collection<String> params,
+        final SqlChangeAutomationVersionOption sqlChangeAutomationVersionOption) {
+        params.add("-RequiredProductVersion");
+        final String productVersion = Optional.ofNullable(sqlChangeAutomationVersionOption)
+                                              .map(x -> x.getOption() == ProductVersionOption.Specific)
+                                              .orElse(false)
+            ? sqlChangeAutomationVersionOption.getSpecificVersion()
+            : ProductVersionOption.Latest.name();
+        params.add(productVersion);
+    }
+
     boolean runSqlContinuousIntegrationCmdlet(
         final AbstractBuild<?, ?> build, final Launcher launcher, final TaskListener listener,
         final Iterable<String> params) {
@@ -74,8 +89,6 @@ abstract class SqlContinuousIntegrationBuilder extends Builder {
 
             longStringBuilder.append(" ").append(fixedParam);
         }
-
-        longStringBuilder.append(" -RequiredProductVersion Latest");
 
         return longStringBuilder.toString();
     }

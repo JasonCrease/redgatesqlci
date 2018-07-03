@@ -84,6 +84,8 @@ public class SyncBuilder extends SqlContinuousIntegrationBuilder {
         return updateScript;
     }
 
+    private final SqlChangeAutomationVersionOption sqlChangeAutomationVersionOption;
+
     @DataBoundConstructor
     public SyncBuilder(
         final String packageid,
@@ -94,7 +96,8 @@ public class SyncBuilder extends SqlContinuousIntegrationBuilder {
         final String filter,
         final String packageVersion,
         final String isolationLevel,
-        final boolean updateScript) {
+        final boolean updateScript,
+        final SqlChangeAutomationVersionOption sqlChangeAutomationVersionOption) {
         this.packageid = packageid;
         this.serverName = serverName;
         this.dbName = dbName;
@@ -106,6 +109,7 @@ public class SyncBuilder extends SqlContinuousIntegrationBuilder {
         this.packageVersion = packageVersion;
         this.isolationLevel = isolationLevel;
         this.updateScript = updateScript;
+        this.sqlChangeAutomationVersionOption = sqlChangeAutomationVersionOption;
     }
 
     @Override
@@ -156,6 +160,8 @@ public class SyncBuilder extends SqlContinuousIntegrationBuilder {
             params.add("-scriptFile");
             params.add(getPackageid() + "." + buildNumber + ".sql");
         }
+
+        addProductVersionParameter(params, sqlChangeAutomationVersionOption);
 
         return runSqlContinuousIntegrationCmdlet(build, launcher, listener, params);
     }

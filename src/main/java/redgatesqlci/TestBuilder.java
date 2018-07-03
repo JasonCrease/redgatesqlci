@@ -102,6 +102,8 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
         return packageVersion;
     }
 
+    private final SqlChangeAutomationVersionOption sqlChangeAutomationVersionOption;
+
     @DataBoundConstructor
     public TestBuilder(
         final String packageid,
@@ -110,12 +112,14 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
         final GenerateTestData generateTestData,
         final String options,
         final String filter,
-        final String packageVersion) {
+        final String packageVersion,
+        final SqlChangeAutomationVersionOption sqlChangeAutomationVersionOption) {
 
         this.packageid = packageid;
         this.tempServer = tempServer.getvalue();
         this.runTestSet = runTestSet.getvalue();
         this.generateTestData = generateTestData == null ? null : "true";
+        this.sqlChangeAutomationVersionOption = sqlChangeAutomationVersionOption;
 
         if ("sqlServer".equals(this.tempServer)) {
             dbName = tempServer.getDbName();
@@ -201,6 +205,8 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
             params.add("-filter");
             params.add(getFilter());
         }
+
+        addProductVersionParameter(params, sqlChangeAutomationVersionOption);
 
         return runSqlContinuousIntegrationCmdlet(build, launcher, listener, params);
     }
