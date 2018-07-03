@@ -47,17 +47,10 @@ public abstract class SqlContinuousIntegrationBuilder extends Builder {
             return false;
         }
 
-        final String longString = generateCmdString(params, sqlCiLocation);
-        final Map<String, String> vars = getEnvironmentVariables(build, listener);
-
         // Run SQL CI with parameters. Send output and error streams to logger.
+        final ProcStarter procStarter = defineProcess(build, launcher, listener, params, sqlCiLocation);
+
         final Proc proc;
-        final ProcStarter procStarter = launcher.new ProcStarter();
-        procStarter.envs(vars);
-
-        procStarter.cmdAsSingleString(longString).stdout(listener.getLogger()).stderr(listener.getLogger())
-                   .pwd(build.getWorkspace());
-
         try {
             proc = launcher.launch(procStarter);
             final int exitCode = proc.join();
@@ -71,21 +64,6 @@ public abstract class SqlContinuousIntegrationBuilder extends Builder {
             listener.getLogger().println("InterruptedException");
             return false;
         }
-    }
-
-    private Map<String, String> getEnvironmentVariables(final AbstractBuild<?, ?> build, final TaskListener listener) {
-        final Map<String, String> vars = new HashMap<>(build.getBuildVariables());
-
-
-        // Set process environment variables to system environment variables. This shouldn't be necessary!
-        final EnvVars envVars;
-        try {
-            envVars = build.getEnvironment(listener);
-            vars.putAll(envVars);
-        } catch (final IOException | InterruptedException ignored) {
-        }
-        vars.put("REDGATE_FUR_ENVIRONMENT", "Jenkins Plugin");
-        return vars;
     }
 
     private String generateCmdString(final Iterable<String> params, final String sqlCiLocation) {
@@ -114,6 +92,37 @@ public abstract class SqlContinuousIntegrationBuilder extends Builder {
             longStringBuilder.append(" ").append(fixedParam);
         }
         return longStringBuilder.toString();
+    }
+
+    private Map<String, String> getEnvironmentVariables(final AbstractBuild<?, ?> build, final TaskListener listener) {
+        final Map<String, String> vars = new HashMap<>(build.getBuildVariables());
+
+
+        // Set process environment variables to system environment variables. This shouldn't be necessary!
+        final EnvVars envVars;
+        try {
+            envVars = build.getEnvironment(listener);
+            vars.putAll(envVars);
+        } catch (final IOException | InterruptedException ignored) {
+        }
+        vars.put("REDGATE_FUR_ENVIRONMENT", "Jenkins Plugin");
+        return vars;
+    }
+
+    private ProcStarter defineProcess(
+        final AbstractBuild<?, ?> build,
+        final Launcher launcher,
+        final TaskListener listener,
+        final Iterable<String> params,
+        final String sqlCiLocation) {
+        final String longString = generateCmdString(params, sqlCiLocation);
+        final Map<String, String> vars = getEnvironmentVariables(build, listener);
+        final ProcStarter procStarter = launcher.new ProcStarter();
+        procStarter.envs(vars);
+
+        procStarter.cmdAsSingleString(longString).stdout(listener.getLogger()).stderr(listener.getLogger())
+                   .pwd(build.getWorkspace());
+        return procStarter;
     }
 
     static String constructPackageFileName(final String packageName, final String buildNumber) {
