@@ -302,7 +302,7 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
          * This human readable name is used in the configuration screen.
          */
         public String getDisplayName() {
-            return "Redgate DLM Automation: Build a database package";
+            return "Redgate SQL Change Automation: Build a database package";
         }
 
         @Override

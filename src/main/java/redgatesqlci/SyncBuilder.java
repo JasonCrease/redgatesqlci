@@ -225,7 +225,7 @@ public class SyncBuilder extends SqlContinuousIntegrationBuilder {
          * This human readable name is used in the configuration screen.
          */
         public String getDisplayName() {
-            return "Redgate DLM Automation: Sync a database package";
+            return "Redgate SQL Change Automation: Sync a database package";
         }
 
         @Override

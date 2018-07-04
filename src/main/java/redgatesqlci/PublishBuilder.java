@@ -139,7 +139,7 @@ public class PublishBuilder extends SqlContinuousIntegrationBuilder {
          * This human readable name is used in the configuration screen.
          */
         public String getDisplayName() {
-            return "Redgate DLM Automation: Publish a database package";
+            return "Redgate SQL Change Automation: Publish a database package";
         }
 
         @Override
