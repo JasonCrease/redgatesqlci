@@ -3,5 +3,5 @@
   This view is used to render the installed plugins page.
 -->
 <div>
- The Redgate DLM Automation Jenkins Plugin is an open-source plugin for using Redgate DLM Automation from within Jenkins. You can build, test, sync and publish database NuGet packages.
+ The Redgate SQL Change Automation Jenkins Plugin is an open-source plugin for using Redgate SQL Change Automation from within Jenkins. You can build, test, sync and publish database NuGet packages.
 </div>

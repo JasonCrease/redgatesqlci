@@ -298,7 +298,7 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
          * This human readable name is used in the configuration screen.
          */
         public String getDisplayName() {
-            return "Redgate DLM Automation: Test a database package";
+            return "Redgate SQL Change Automation: Test a database using tSQLt";
         }
 
         @Override
