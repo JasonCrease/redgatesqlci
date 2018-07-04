@@ -13,6 +13,7 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+import redgatesqlci.DbFolder.ProjectOption;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -22,9 +23,9 @@ import java.util.Collection;
 @SuppressWarnings({"unused", "WeakerAccess", "InstanceVariableOfConcreteClass"})
 public class BuildBuilder extends SqlContinuousIntegrationBuilder {
 
-    private final String dbFolder;
+    private final ProjectOption dbFolder;
 
-    public String getDbFolder() {
+    public ProjectOption getDbFolder() {
         return dbFolder;
     }
 
@@ -174,9 +175,9 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         }
         params.add("Build");
 
-        if ("subfolder".equals(getDbFolder())) {
+        if (dbFolder == ProjectOption.subfolder) {
             params.add("-scriptsFolder");
-            final Path path = Paths.get(checkOutPath.getRemote(), getSubfolder());
+            final Path path = Paths.get(checkOutPath.getRemote(), subfolder);
             params.add(path.toString());
         }
         else {

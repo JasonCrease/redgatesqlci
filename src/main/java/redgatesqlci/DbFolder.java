@@ -3,10 +3,15 @@ package redgatesqlci;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class DbFolder {
-    private final String value;
+    public enum ProjectOption {
+        vcsroot,
+        subfolder
+    }
+
+    private final ProjectOption value;
     private final String subfolder;
 
-    public String getvalue() {
+    public ProjectOption getvalue() {
         return value;
     }
 
@@ -15,7 +20,7 @@ public class DbFolder {
     }
 
     @DataBoundConstructor
-    public DbFolder(final String value, final String subfolder) {
+    public DbFolder(final ProjectOption value, final String subfolder) {
         this.value = value;
         this.subfolder = subfolder;
     }
