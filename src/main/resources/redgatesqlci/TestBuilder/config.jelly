@@ -10,11 +10,27 @@
     }
   </style>
 
-  <f:section title="Database package to test">
-    <f:block><span class="tip">Enter the ID of the package that you want to test. The ID must be for a package built by Redgate DLM Automation.</span></f:block>
-    <f:entry title="Package ID:" field="packageid">
-      <f:textbox/>
-    </f:entry>
+  <f:section title="Test source">
+    <f:block><span class="tip">Specify the type of database project you wish to test.</span></f:block>
+    <f:radioBlock name="testSource" title="Test a SQL Change Automation project using tSQLt tests" value="scaproject" checked="${instance.testSource == null || instance.testSource == 'scaproject'}">
+      <f:nested>
+        <f:entry title="Project path:" field="projectPath">
+          <f:textbox/>
+        </f:entry>
+      </f:nested>
+    </f:radioBlock>
+    <f:radioBlock name="testSource" title="Test a build artifact from a SQL Source Control project using tSQLt tests" value="socartifact" checked="${!(instance.testSource == null || instance.testSource == 'scaproject')}">
+      <f:nested>
+        <f:entry title="NuGet package ID:" field="packageid">
+          <f:textbox/>
+        </f:entry>
+        <f:advanced>
+          <f:entry title="Override package version:" field="packageVersion">
+            <f:textbox/>
+          </f:entry>
+        </f:advanced>
+      </f:nested>
+    </f:radioBlock>
   </f:section>
 
   <f:section title="Temporary database server">
@@ -72,16 +88,13 @@
     </f:optionalBlock>
   </f:section>
 
-  <f:section title="Advanced Options">
+  <f:section title="SQL Source Control project options">
     <f:block>
       <f:entry title="SQL Compare options:" field="options">
           <f:textbox/>
       </f:entry>
       <f:entry title="SQL Compare filter:" field="filter">
           <f:textbox/>
-      </f:entry>
-      <f:entry title="Package version:" field="packageVersion">
-        <f:textbox/>
       </f:entry>
     </f:block>
   </f:section>
