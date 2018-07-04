@@ -13,9 +13,9 @@
   <version>1.0.17-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
-  <name>Redgate DLM Automation</name>
-  <url>https://wiki.jenkins-ci.org/display/JENKINS/Redgate+DLM+Automation+Plugin</url>
-  <description>Build, test, sync and publish your databases using Redgate DLM Automation.</description>
+  <name>Redgate SQL Change Automation</name>
+  <url>https://wiki.jenkins-ci.org/display/JENKINS/Redgate+SQL+Change+Automation+Plugin</url>
+  <description>Continuous integration and automated deployments for your SQL Server database</description>
   <licenses>
     <license>
       <name>Apache 2</name>
