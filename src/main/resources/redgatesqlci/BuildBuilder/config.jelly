@@ -12,24 +12,39 @@
         }
     </style>
 
-    <f:section title="Source-controlled database" >
-        <f:radioBlock name="dbFolder" title="Database folder is in my build VCS root" value="vcsroot" checked="${instance.dbFolder == null || instance.dbFolder == 'vcsroot'}" />
-        <f:radioBlock name="dbFolder" title="Database folder is a subfolder of my VCS root" value="subfolder" checked="${!(instance.dbFolder == null || instance.dbFolder == 'vcsroot')}">
+    <f:section title="Database project" >
+        <f:radioBlock name="dbFolder" title="Build a SQL Change Automation project" value="scaproject" checked="${instance.dbFolder == null || instance.dbFolder == 'scaproject'}">
+            <f:nested>
+                <f:entry title="Project path:" field="projectPath">
+                    <f:textbox/>
+                </f:entry>
+                <f:block>
+                    <span class="tip">Enter the path to your SQL Change Automation project relative to your checkout directory</span>
+                </f:block>
+            </f:nested>
+        </f:radioBlock>
+        <f:radioBlock name="dbFolder" title="Build a SQL Source Control project in the root of the checkout directory" value="vcsroot" checked="${!(instance.dbFolder == null || instance.dbFolder == 'scaproject' || instance.dbFolder == 'subfolder')}" />
+        <f:radioBlock name="dbFolder" title="Build a SQL Source Control project in a subfolder of the checkout directory" value="subfolder" checked="${!(instance.dbFolder == null || instance.dbFolder == 'scaproject' || instance.dbFolder == 'vcsroot')}">
             <f:nested>
                 <f:entry title="Subfolder location:" field="subfolder">
                     <f:textbox/>
                 </f:entry>
                 <f:block>
-                    <span class="tip">Enter a path relative to your VCS root. For instance, if your scripts-folder is D:\MyRepository\DatabaseStuff\Scripts, enter \DatabaseStuff\Scripts.</span>
+                    <span class="tip">Enter the path to your SQL Source Control project folder relative to your checkout directory</span>
                 </f:block>
             </f:nested>
         </f:radioBlock>
     </f:section>
 
-    <f:section title="Output package">
-        <f:entry title="Package ID:" field="packageid">
+    <f:section title="Build artifact">
+        <f:entry title="NuGet package ID:" field="packageid">
             <f:textbox/>
         </f:entry>
+        <f:advanced>
+            <f:entry title="Override package version:" field="packageVersion">
+                <f:textbox/>
+            </f:entry>
+        </f:advanced>
     </f:section>
 
     <f:section title="Temporary database server">
@@ -62,16 +77,13 @@
 
     </f:section>
 
-    <f:section title="Advanced Options">
+    <f:section title="SQL Source Control project options">
 
         <f:block>
             <f:entry title="SQL Compare options:" field="options">
                 <f:textbox/>
             </f:entry>
             <f:entry title="SQL Compare filter:" field="filter">
-                <f:textbox/>
-            </f:entry>
-            <f:entry title="Package version:" field="packageVersion">
                 <f:textbox/>
             </f:entry>
             <f:block>

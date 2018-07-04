@@ -1,6 +1,7 @@
 package redgatesqlci;
 
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
@@ -12,12 +13,27 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+import redgatesqlci.TestSource.TestSourceOption;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 
 @SuppressWarnings({"WeakerAccess", "InstanceVariableOfConcreteClass", "unused"})
 public class TestBuilder extends SqlContinuousIntegrationBuilder {
+    private final TestSourceOption testSource;
+
+    public TestSourceOption getTestSource() {
+        return Optional.ofNullable(testSource).orElse(TestSourceOption.socartifact);
+    }
+
+    private final String projectPath;
+
+    public String getProjectPath() {
+        return projectPath;
+    }
 
     private final String packageid;
 
@@ -118,9 +134,20 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
         final String options,
         final String filter,
         final String packageVersion,
-        final SqlChangeAutomationVersionOption sqlChangeAutomationVersionOption) {
+        final SqlChangeAutomationVersionOption sqlChangeAutomationVersionOption,
+        final TestSource testSource) {
+        if (testSource == null) {
+            this.testSource = TestSourceOption.socartifact;
+            projectPath = null;
+            this.packageid = packageid;
+            this.packageVersion = packageVersion;
+        } else {
+            this.testSource = testSource.getOption();
+            projectPath = testSource.getProjectPath();
+            this.packageid = testSource.getPackageid();
+            this.packageVersion = testSource.getProjectPath();
+        }
 
-        this.packageid = packageid;
         this.tempServer = tempServer.getvalue();
         this.runTestSet = runTestSet.getvalue();
         this.generateTestData = generateTestData == null ? null : "true";
@@ -157,7 +184,6 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
 
         this.options = options;
         this.filter = filter;
-        this.packageVersion = packageVersion;
     }
 
     @Override
@@ -169,12 +195,13 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
             buildNumber = getPackageVersion();
         }
 
-        final String packageFileName = SqlContinuousIntegrationBuilder
-            .constructPackageFileName(getPackageid(), buildNumber);
-
         params.add("Test");
-        params.add("-package");
-        params.add(packageFileName);
+
+        final FilePath checkOutPath = build.getWorkspace();
+        if (checkOutPath == null) {
+            return false;
+        }
+        addTestSourceParameter(params, checkOutPath, buildNumber);
 
         if ("sqlServer".equals(getTempServer())) {
             params.add("-temporaryDatabaseServer");
@@ -214,6 +241,21 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
         addProductVersionParameter(params, sqlChangeAutomationVersionOption);
 
         return runSqlContinuousIntegrationCmdlet(build, launcher, listener, params);
+    }
+
+    private void addTestSourceParameter(final Collection<String> params, final FilePath checkOutPath, final String buildNumber) {
+        params.add("-package");
+        switch (testSource){
+            case scaproject:
+                final Path projectPath = Paths.get(checkOutPath.getRemote(), this.projectPath);
+                params.add(projectPath.toString());
+                break;
+            case socartifact:
+                final String packageFileName = SqlContinuousIntegrationBuilder
+                    .constructPackageFileName(getPackageid(), buildNumber);
+                params.add(packageFileName);
+                break;
+        }
     }
 
 

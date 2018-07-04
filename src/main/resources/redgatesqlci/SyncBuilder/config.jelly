@@ -12,11 +12,16 @@
     }
   </style>
 
-  <f:section title="Database package to sync">
-    <f:block><span class="tip">Enter the ID of the package you want to use to update the target database. The ID must be for a package built by Redgate DLM Automation.</span></f:block>
-    <f:entry title="Package ID:" field="packageid">
+  <f:section title="Build artifact to sync">
+    <f:block><span class="tip">Enter the ID of the package you want to use to update the target database.</span></f:block>
+    <f:entry title="NuGet package ID:" field="packageid">
       <f:textbox/>
     </f:entry>
+    <f:advanced>
+      <f:entry title="Override package version:" field="packageVersion">
+        <f:textbox/>
+      </f:entry>
+    </f:advanced>
   </f:section>
 
   <f:section title="Target database">
@@ -40,12 +45,14 @@
     </f:radioBlock>
   </f:section>
 
+  <f:section title="Output artifact">
+    <f:entry title="Output update script:" field="updateScript">
+      <f:checkbox checked="${instance.updateScript}"/>
+    </f:entry>
+  </f:section>
 
-  <f:section title="Advanced Options">
+  <f:section title="SQL Source Control project options">
     <f:block>
-      <f:entry title="Output update script:" field="updateScript">
-          <f:checkbox checked="${instance.updateScript}"/>
-      </f:entry>
       <f:entry title="SQL Compare options:" field="options">
           <f:textbox/>
       </f:entry>
@@ -53,9 +60,6 @@
           <f:textbox/>
       </f:entry>
       <f:entry title="Transaction isolation level:" field="isolationLevel">
-          <f:textbox/>
-      </f:entry>
-      <f:entry title="Package version:" field="packageVersion">
           <f:textbox/>
       </f:entry>
       <f:block>
