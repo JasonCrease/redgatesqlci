@@ -35,6 +35,12 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         return subfolder;
     }
 
+    private final String projectPath;
+
+    public String getProjectPath() {
+        return projectPath;
+    }
+
     private final String packageid;
 
     public String getPackageid() {
@@ -129,8 +135,9 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         final String packageVersion,
         final DlmDashboard dlmDashboard,
         final SqlChangeAutomationVersionOption sqlChangeAutomationVersionOption) {
-        this.dbFolder = dbFolder.getvalue();
-        subfolder = dbFolder.getsubfolder();
+        this.dbFolder = dbFolder.getValue();
+        subfolder = dbFolder.getSubfolder();
+        projectPath = dbFolder.getProjectPath();
         this.packageid = packageid;
         this.tempServer = tempServer.getvalue();
         this.sqlChangeAutomationVersionOption = sqlChangeAutomationVersionOption;
@@ -232,12 +239,16 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         params.add("-scriptsFolder");
 
         switch (dbFolder){
+            case scaproject:
+                final Path projectPath = Paths.get(checkOutPath.getRemote(), this.projectPath);
+                params.add(projectPath.toString());
+                break;
             case vcsroot:
                 params.add(checkOutPath.getRemote());
                 break;
             case subfolder:
-                final Path path = Paths.get(checkOutPath.getRemote(), subfolder);
-                params.add(path.toString());
+                final Path subfolderPath = Paths.get(checkOutPath.getRemote(), subfolder);
+                params.add(subfolderPath.toString());
                 break;
         }
     }
