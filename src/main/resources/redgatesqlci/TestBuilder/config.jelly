@@ -34,7 +34,7 @@
   </f:section>
 
   <f:section title="Temporary database server">
-    <f:block><span class="tip">Redgate DLM Automation will recreate and validate your database on a temporary server before testing it.</span></f:block>
+    <f:block><span class="tip">Redgate SQL Change Automation will recreate and validate your database on a temporary server before testing it.</span></f:block>
     <f:radioBlock name="tempServer" title="SQL LocalDB (recommended)" value="localdb" checked="${instance.tempServer == null || instance.tempServer == 'localdb'}"/>
     <f:radioBlock name="tempServer" title="SQL Server" value="sqlServer"  checked="${!(instance.tempServer == null || instance.tempServer == 'localdb')}">
       <f:nested>

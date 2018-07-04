@@ -25,7 +25,7 @@
   </f:section>
 
   <f:section title="Target database">
-    <f:block><span class="tip">Redgate DLM Automation will update the target database you specify here.</span></f:block>
+    <f:block><span class="tip">Redgate SQL Change Automation will update the target database you specify here.</span></f:block>
     <f:entry title="Server:" field="serverName">
       <f:textbox/>
     </f:entry>
