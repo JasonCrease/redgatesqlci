@@ -36,10 +36,15 @@
         </f:radioBlock>
     </f:section>
 
-    <f:section title="Output package">
-        <f:entry title="Package ID:" field="packageid">
+    <f:section title="Build artifact">
+        <f:entry title="NuGet package ID:" field="packageid">
             <f:textbox/>
         </f:entry>
+        <f:advanced>
+            <f:entry title="Override package version:" field="packageVersion">
+                <f:textbox/>
+            </f:entry>
+        </f:advanced>
     </f:section>
 
     <f:section title="Temporary database server">
@@ -72,16 +77,13 @@
 
     </f:section>
 
-    <f:section title="Advanced Options">
+    <f:section title="SQL Source Control project options">
 
         <f:block>
             <f:entry title="SQL Compare options:" field="options">
                 <f:textbox/>
             </f:entry>
             <f:entry title="SQL Compare filter:" field="filter">
-                <f:textbox/>
-            </f:entry>
-            <f:entry title="Package version:" field="packageVersion">
                 <f:textbox/>
             </f:entry>
             <f:block>
