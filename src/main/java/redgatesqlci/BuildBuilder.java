@@ -175,15 +175,8 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         }
         params.add("Build");
 
-        if (dbFolder == ProjectOption.subfolder) {
-            params.add("-scriptsFolder");
-            final Path path = Paths.get(checkOutPath.getRemote(), subfolder);
-            params.add(path.toString());
-        }
-        else {
-            params.add("-scriptsFolder");
-            params.add(checkOutPath.getRemote());
-        }
+        addProjectOptionParams(params, checkOutPath);
+
         params.add("-packageId");
         params.add(getPackageid());
 
@@ -233,6 +226,20 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         addProductVersionParameter(params, sqlChangeAutomationVersionOption);
 
         return runSqlContinuousIntegrationCmdlet(build, launcher, listener, params);
+    }
+
+    private void addProjectOptionParams(final Collection<String> params, final FilePath checkOutPath) {
+        params.add("-scriptsFolder");
+
+        switch (dbFolder){
+            case vcsroot:
+                params.add(checkOutPath.getRemote());
+                break;
+            case subfolder:
+                final Path path = Paths.get(checkOutPath.getRemote(), subfolder);
+                params.add(path.toString());
+                break;
+        }
     }
 
     private static String getEscapedOptions(final String options) {
