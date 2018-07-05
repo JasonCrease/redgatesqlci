@@ -1,6 +1,7 @@
 package redgatesqlci;
 
 import hudson.EnvVars;
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Launcher.ProcStarter;
 import hudson.Proc;
@@ -10,13 +11,7 @@ import hudson.tasks.Builder;
 import redgatesqlci.SqlChangeAutomationVersionOption.ProductVersionOption;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 abstract class SqlContinuousIntegrationBuilder extends Builder {
     void addProductVersionParameter(
@@ -34,18 +29,30 @@ abstract class SqlContinuousIntegrationBuilder extends Builder {
     boolean runSqlContinuousIntegrationCmdlet(
         final AbstractBuild<?, ?> build, final Launcher launcher, final TaskListener listener,
         final Iterable<String> params) {
-        final String scaRunnerLocation;
+
         try {
-            final URL scaRunnerUrl = getClass().getResource("/PowerShell/SqlChangeAutomationRunner.ps1");
-            scaRunnerLocation = Paths.get(scaRunnerUrl.toURI()).toAbsolutePath().toString();
-        } catch (final URISyntaxException e) {
-            listener.error("URI syntax error: " + e.getMessage());
+            final FilePath scaRunnerLocation = CopyResourceToWorkspace(build, "PowerShell/SqlChangeAutomationRunner.ps1");
+            CopyResourceToWorkspace(build, "PowerShell/PowershellGallery.ps1");
+            CopyResourceToWorkspace(build, "PowerShell/SqlCi.ps1");
+
+            // Run SQL CI with parameters. Send output and error streams to logger.
+            final ProcStarter procStarter = defineProcess(build, launcher, listener, params, scaRunnerLocation);
+            return executeProcess(launcher, listener, procStarter);
+        } catch (final IOException e) {
+            listener.error("Unexpected I/O exception executing cmdlet: " + e.getMessage());
+            return false;
+        } catch (final InterruptedException e) {
+            listener.error("Unexpected thread interruption executing cmdlet");
             return false;
         }
+    }
 
-        // Run SQL CI with parameters. Send output and error streams to logger.
-        final ProcStarter procStarter = defineProcess(build, launcher, listener, params, scaRunnerLocation);
-        return executeProcess(launcher, listener, procStarter);
+    private FilePath CopyResourceToWorkspace(
+        final AbstractBuild<?, ?> build,
+        final String relativeFilePath) throws IOException, InterruptedException {
+        final FilePath filePath = new FilePath(Objects.requireNonNull(build.getWorkspace()), relativeFilePath);
+        filePath.copyFrom(getClass().getResourceAsStream('/' + relativeFilePath));
+        return filePath;
     }
 
     private ProcStarter defineProcess(
@@ -53,8 +60,8 @@ abstract class SqlContinuousIntegrationBuilder extends Builder {
         final Launcher launcher,
         final TaskListener listener,
         final Iterable<String> params,
-        final String scaRunnerLocation) {
-        final String longString = generateCmdString(params, scaRunnerLocation);
+        final FilePath scaRunnerLocation) {
+        final String longString = generateCmdString(params, scaRunnerLocation.getRemote());
         final Map<String, String> vars = getEnvironmentVariables(build, listener);
         final ProcStarter procStarter = launcher.new ProcStarter();
         procStarter.envs(vars);
@@ -111,19 +118,11 @@ abstract class SqlContinuousIntegrationBuilder extends Builder {
     private boolean executeProcess(
         final Launcher launcher,
         final TaskListener listener,
-        final ProcStarter procStarter) {
+        final ProcStarter procStarter) throws IOException, InterruptedException {
         final Proc proc;
-        try {
-            proc = launcher.launch(procStarter);
-            final int exitCode = proc.join();
-            return exitCode == 0;
-        } catch (final IOException e) {
-            listener.error("Unexpected I/O exception executing cmdlet: " + e.getMessage());
-            return false;
-        } catch (final InterruptedException e) {
-            listener.error("Unexpected thread interruption executing cmdlet");
-            return false;
-        }
+        proc = launcher.launch(procStarter);
+        final int exitCode = proc.join();
+        return exitCode == 0;
     }
 
     static String constructPackageFileName(final String packageName, final String buildNumber) {
