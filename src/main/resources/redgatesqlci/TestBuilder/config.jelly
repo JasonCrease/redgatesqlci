@@ -77,7 +77,7 @@
   <f:section title="Generate test data">
     <f:optionalBlock title="Generate test data" field="generateTestData" checked="${instance.generateTestData != null}">
       <f:nested>
-        <f:entry title="SQL Data Generator project file" field="sqlgenPath">
+        <f:entry title="SQL Data Generator project file:" field="sqlgenPath">
           <f:textbox/>
         </f:entry>
         <f:block>
