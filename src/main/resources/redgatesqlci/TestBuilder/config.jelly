@@ -81,7 +81,7 @@
           <f:textbox/>
         </f:entry>
         <f:block>
-          <span class="tip">Enter the path of a SQL Data Generator project (.sqlgen) file. The path must be relative to the VCS root.
+          <span class="tip">Optional. If you already have a SQL Data Generator project file (.sqlgen) you wish you use, include the path and filename here. The path must be relative to the VCS root.
           </span>
         </f:block>
       </f:nested>
