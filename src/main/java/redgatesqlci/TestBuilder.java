@@ -245,7 +245,7 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
 
     private void addTestSourceParameter(final Collection<String> params, final FilePath checkOutPath, final String buildNumber) {
         params.add("-package");
-        switch (testSource){
+        switch (getTestSource()){
             case scaproject:
                 final Path projectPath = Paths.get(checkOutPath.getRemote(), this.projectPath);
                 params.add(projectPath.toString());
