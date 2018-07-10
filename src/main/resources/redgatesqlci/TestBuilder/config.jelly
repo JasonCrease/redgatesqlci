@@ -61,9 +61,9 @@
 
   <f:section title="Run tests">
     <f:radioBlock name="runTestSet" title="Run every test" value="runEveryTest" checked="${instance.runTestSet == null || instance.runTestSet == 'runEveryTest'}"/>
-    <f:radioBlock name="runTestSet" title="Run only:" value="runOnlyTest" checked="${!(instance.runTestSet == null || instance.runTestSet == 'runEveryTest')}">
+    <f:radioBlock name="runTestSet" title="Run selected tests only" value="runOnlyTest" checked="${!(instance.runTestSet == null || instance.runTestSet == 'runEveryTest')}">
       <f:nested>
-        <f:entry title="" field="runOnlyParams">
+        <f:entry title="Tests to be run:" field="runOnlyParams">
           <f:textbox/>
         </f:entry>
         <f:block>
@@ -77,11 +77,11 @@
   <f:section title="Generate test data">
     <f:optionalBlock title="Generate test data" field="generateTestData" checked="${instance.generateTestData != null}">
       <f:nested>
-        <f:entry title="SQL Data Generator project file" field="sqlgenPath">
+        <f:entry title="SQL Data Generator project file:" field="sqlgenPath">
           <f:textbox/>
         </f:entry>
         <f:block>
-          <span class="tip">Enter the path of a SQL Data Generator project (.sqlgen) file. The path must be relative to the VCS root.
+          <span class="tip">Optional. If you already have a SQL Data Generator project file (.sqlgen) you wish you use, include the path and filename here. The path must be relative to the VCS root.
           </span>
         </f:block>
       </f:nested>
