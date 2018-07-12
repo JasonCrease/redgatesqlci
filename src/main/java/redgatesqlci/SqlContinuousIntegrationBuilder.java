@@ -8,9 +8,11 @@ import hudson.Proc;
 import hudson.model.AbstractBuild;
 import hudson.model.TaskListener;
 import hudson.tasks.Builder;
+import org.apache.commons.io.IOUtils;
 import redgatesqlci.SqlChangeAutomationVersionOption.ProductVersionOption;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 abstract class SqlContinuousIntegrationBuilder extends Builder {
@@ -50,8 +52,13 @@ abstract class SqlContinuousIntegrationBuilder extends Builder {
     private FilePath CopyResourceToWorkspace(
         final AbstractBuild<?, ?> build,
         final String relativeFilePath) throws IOException, InterruptedException {
-        final FilePath filePath = new FilePath(Objects.requireNonNull(build.getWorkspace()), relativeFilePath);
-        filePath.copyFrom(getClass().getResourceAsStream('/' + relativeFilePath));
+        final FilePath filePath = new FilePath(build.getWorkspace(), relativeFilePath);
+        InputStream stream = getClass().getResourceAsStream('/' + relativeFilePath);
+        try {
+            filePath.copyFrom(stream);
+        } finally {
+            IOUtils.closeQuietly(stream);
+        }
         return filePath;
     }
 
