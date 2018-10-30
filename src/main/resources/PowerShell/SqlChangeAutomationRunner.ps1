@@ -37,6 +37,6 @@ try {
         throw "Error running SQL Change Automation action: see build log for error details"
     }
 } catch {
-    Write-Error $_
-   [System.Environment]::Exit(1)
+    Write-Error $_ -ErrorAction "Continue"
+    [System.Environment]::Exit(1)
 }
