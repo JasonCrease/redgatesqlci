@@ -89,6 +89,12 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         return options;
     }
 
+    private final TransactionIsolationLevel transactionIsolationLevel;
+
+    public TransactionIsolationLevel getTransactionIsolationLevel() {
+        return transactionIsolationLevel;
+    }
+
     private final String filter;
 
     public String getFilter() {
@@ -131,6 +137,7 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         final String packageid,
         final Server tempServer,
         final String options,
+        final TransactionIsolationLevel transactionIsolationLevel,
         final String filter,
         final String packageVersion,
         final DlmDashboard dlmDashboard,
@@ -158,6 +165,7 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         }
 
         this.options = options;
+        this.transactionIsolationLevel = transactionIsolationLevel;
         this.filter = filter;
         this.packageVersion = packageVersion;
 
@@ -199,6 +207,11 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         if (!options.isEmpty()) {
             params.add("-Options");
             params.add(getEscapedOptions(getOptions()));
+        }
+
+        if (getTransactionIsolationLevel() != null) {
+            params.add("-TransactionIsolationLevel");
+            params.add(getTransactionIsolationLevel().name());
         }
 
         if (!filter.isEmpty()) {
