@@ -9,6 +9,7 @@ import hudson.model.BuildListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -18,7 +19,9 @@ import redgatesqlci.DbFolder.ProjectOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 @SuppressWarnings({"unused", "WeakerAccess", "InstanceVariableOfConcreteClass"})
 public class BuildBuilder extends SqlContinuousIntegrationBuilder {
@@ -89,6 +92,12 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         return options;
     }
 
+    private final TransactionIsolationLevel transactionIsolationLevel;
+
+    public TransactionIsolationLevel getTransactionIsolationLevel() {
+        return transactionIsolationLevel;
+    }
+
     private final String filter;
 
     public String getFilter() {
@@ -127,14 +136,15 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
 
     @DataBoundConstructor
     public BuildBuilder(
-        final DbFolder dbFolder,
-        final String packageid,
-        final Server tempServer,
-        final String options,
-        final String filter,
-        final String packageVersion,
-        final DlmDashboard dlmDashboard,
-        final SqlChangeAutomationVersionOption sqlChangeAutomationVersionOption) {
+            final DbFolder dbFolder,
+            final String packageid,
+            final Server tempServer,
+            final String options,
+            final TransactionIsolationLevel transactionIsolationLevel,
+            final String filter,
+            final String packageVersion,
+            final DlmDashboard dlmDashboard,
+            final SqlChangeAutomationVersionOption sqlChangeAutomationVersionOption) {
         this.dbFolder = dbFolder.getValue();
         subfolder = dbFolder.getSubfolder();
         projectPath = dbFolder.getProjectPath();
@@ -148,8 +158,7 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
             serverAuth = tempServer.getServerAuth().getvalue();
             username = tempServer.getServerAuth().getUsername();
             password = tempServer.getServerAuth().getPassword();
-        }
-        else {
+        } else {
             dbName = "";
             serverName = "";
             serverAuth = null;
@@ -158,6 +167,7 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         }
 
         this.options = options;
+        this.transactionIsolationLevel = transactionIsolationLevel;
         this.filter = filter;
         this.packageVersion = packageVersion;
 
@@ -165,8 +175,7 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         if (getSendToDlmDashboard()) {
             dlmDashboardHost = dlmDashboard.getDlmDashboardHost();
             dlmDashboardPort = dlmDashboard.getDlmDashboardPort();
-        }
-        else {
+        } else {
             dlmDashboardHost = null;
             dlmDashboardPort = null;
         }
@@ -190,8 +199,7 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         if (getPackageVersion() == null || getPackageVersion().isEmpty()) {
             params.add("-packageVersion");
             params.add("1.0." + build.getNumber());
-        }
-        else {
+        } else {
             params.add("-packageVersion");
             params.add(getPackageVersion());
         }
@@ -199,6 +207,11 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         if (!options.isEmpty()) {
             params.add("-Options");
             params.add(getEscapedOptions(getOptions()));
+        }
+
+        if (transactionIsolationLevel != null) {
+            params.add("-TransactionIsolationLevel");
+            params.add(transactionIsolationLevel.name());
         }
 
         if (!filter.isEmpty()) {
@@ -238,7 +251,7 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
     private void addProjectOptionParams(final Collection<String> params, final FilePath checkOutPath) {
         params.add("-scriptsFolder");
 
-        switch (dbFolder){
+        switch (dbFolder) {
             case scaproject:
                 final Path projectPath = Paths.get(checkOutPath.getRemote(), this.projectPath);
                 params.add(projectPath.toString());
@@ -288,6 +301,15 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
                 return FormValidation.error("Enter a package ID.");
             }
             return FormValidation.ok();
+        }
+
+        public ListBoxModel doFillTransactionIsolationLevelItems() {
+            return Arrays.stream(TransactionIsolationLevel.values())
+                    .map(transactionIsolationLevel ->
+                            new ListBoxModel.Option(
+                                    transactionIsolationLevel.getDisplayName(),
+                                    transactionIsolationLevel.name()))
+                    .collect(Collectors.toCollection(ListBoxModel::new));
         }
 
         // Since the AJAX callbacks don't give the value of radioblocks, I can't validate the value of the server and
