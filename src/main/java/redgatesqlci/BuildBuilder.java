@@ -9,6 +9,7 @@ import hudson.model.BuildListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -301,6 +302,14 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
                 return FormValidation.error("Enter a package ID.");
             }
             return FormValidation.ok();
+        }
+
+        public ListBoxModel doFillTransactionIsolationLevelItems() {
+            ListBoxModel items = new ListBoxModel();
+            for (TransactionIsolationLevel transactionIsolationLevel : TransactionIsolationLevel.values()) {
+                items.add(transactionIsolationLevel.toString(), transactionIsolationLevel.name());
+            }
+            return items;
         }
 
         // Since the AJAX callbacks don't give the value of radioblocks, I can't validate the value of the server and
