@@ -1,21 +1,20 @@
 package redgatesqlci;
 
-import java.util.Optional;
-
+// Enum names must match the accepted input in SQL Change Automation as we use .name()
 public enum TransactionIsolationLevel {
-    Serializable(), Snapshot(), RepeatableRead("Repeatable Read"), ReadCommitted("Read Committed"), ReadUncommitted("Read Uncommitted");
+    Serializable("Serializable"),
+    Snapshot("Snapshot"),
+    RepeatableRead("Repeatable Read"),
+    ReadCommitted("Read Committed"),
+    ReadUncommitted("Read Uncommitted");
 
-    private final Optional<String> displayName;
+    private final String displayName;
 
-    private TransactionIsolationLevel() {
-        displayName = Optional.empty();
-    }
-
-    private TransactionIsolationLevel(String value) {
-        displayName = Optional.ofNullable(value);
+    TransactionIsolationLevel(String value) {
+        displayName = value;
     }
 
     public String getDisplayName() {
-        return displayName.orElse(name());
+        return displayName;
     }
 }
