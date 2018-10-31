@@ -307,7 +307,7 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         public ListBoxModel doFillTransactionIsolationLevelItems() {
             ListBoxModel items = new ListBoxModel();
             for (TransactionIsolationLevel transactionIsolationLevel : TransactionIsolationLevel.values()) {
-                items.add(transactionIsolationLevel.toString(), transactionIsolationLevel.name());
+                items.add(transactionIsolationLevel.getDisplayName(), transactionIsolationLevel.name());
             }
             return items;
         }
