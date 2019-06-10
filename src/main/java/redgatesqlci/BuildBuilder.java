@@ -89,6 +89,12 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         return options;
     }
 
+    private final String dataOptions;
+
+    public String getDataOptions() {
+        return dataOptions;
+    }
+
     private final String filter;
 
     public String getFilter() {
@@ -131,6 +137,7 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         final String packageid,
         final Server tempServer,
         final String options,
+        final String dataOptions,
         final String filter,
         final String packageVersion,
         final DlmDashboard dlmDashboard,
@@ -158,6 +165,7 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         }
 
         this.options = options;
+        this.dataOptions = dataOptions;
         this.filter = filter;
         this.packageVersion = packageVersion;
 
@@ -198,7 +206,12 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
 
         if (!options.isEmpty()) {
             params.add("-Options");
-            params.add(getEscapedOptions(getOptions()));
+            params.add(getEscapedOptions(options));
+        }
+
+        if (!dataOptions.isEmpty()) {
+            params.add("-DataOptions");
+            params.add(getEscapedOptions(dataOptions));
         }
 
         if (!filter.isEmpty()) {
