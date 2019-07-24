@@ -61,6 +61,12 @@ public class SyncBuilder extends SqlContinuousIntegrationBuilder {
         return options;
     }
 
+    private final String dataOptions;
+
+    public String getDataOptions() {
+        return dataOptions;
+    }
+
     private final String filter;
 
     public String getFilter() {
@@ -98,6 +104,7 @@ public class SyncBuilder extends SqlContinuousIntegrationBuilder {
         final String dbName,
         final ServerAuth serverAuth,
         final String options,
+        final String dataOptions,
         final String filter,
         final String packageVersion,
         final String isolationLevel,
@@ -110,6 +117,7 @@ public class SyncBuilder extends SqlContinuousIntegrationBuilder {
         username = serverAuth.getUsername();
         password = serverAuth.getPassword();
         this.options = options;
+        this.dataOptions = dataOptions;
         this.filter = filter;
         this.packageVersion = packageVersion;
         this.isolationLevel = isolationLevel;
@@ -146,9 +154,14 @@ public class SyncBuilder extends SqlContinuousIntegrationBuilder {
             params.add(getPassword());
         }
 
-        if (!getOptions().isEmpty()) {
+        if (!options.isEmpty()) {
             params.add("-Options");
-            params.add(getOptions());
+            params.add(options);
+        }
+
+        if (!dataOptions.isEmpty()) {
+            params.add("-DataOptions");
+            params.add(dataOptions);
         }
 
         if (!getFilter().isEmpty()) {

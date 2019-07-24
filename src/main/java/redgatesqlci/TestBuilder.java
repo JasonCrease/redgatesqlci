@@ -83,6 +83,12 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
         return options;
     }
 
+    private final String dataOptions;
+
+    public String getDataOptions() {
+        return dataOptions;
+    }
+
     private final String filter;
 
     public String getFilter() {
@@ -132,6 +138,7 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
         final RunTestSet runTestSet,
         final GenerateTestData generateTestData,
         final String options,
+        final String dataOptions,
         final String filter,
         final String packageVersion,
         final SqlChangeAutomationVersionOption sqlChangeAutomationVersionOption,
@@ -183,6 +190,7 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
         }
 
         this.options = options;
+        this.dataOptions = dataOptions;
         this.filter = filter;
     }
 
@@ -228,9 +236,14 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
             params.add(getSqlgenPath());
         }
 
-        if (!getOptions().isEmpty()) {
+        if (!options.isEmpty()) {
             params.add("-Options");
-            params.add(getOptions());
+            params.add(options);
+        }
+
+        if (!dataOptions.isEmpty()) {
+            params.add("-DataOptions");
+            params.add(dataOptions);
         }
 
         if (!getFilter().isEmpty()) {
