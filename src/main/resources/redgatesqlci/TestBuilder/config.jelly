@@ -93,6 +93,9 @@
       <f:entry title="SQL Compare options:" field="options">
           <f:textbox/>
       </f:entry>
+      <f:entry title="SQL Data Compare options:" field="dataOptions">
+          <f:textbox/>
+      </f:entry>
       <f:entry title="SQL Compare filter:" field="filter">
           <f:textbox/>
       </f:entry>
