@@ -8,6 +8,7 @@ import hudson.Proc;
 import hudson.model.AbstractBuild;
 import hudson.model.TaskListener;
 import hudson.tasks.Builder;
+import hudson.util.ArgumentListBuilder;
 import org.apache.commons.io.IOUtils;
 import redgatesqlci.SqlChangeAutomationVersionOption.ProductVersionOption;
 
@@ -68,43 +69,38 @@ abstract class SqlContinuousIntegrationBuilder extends Builder {
         final TaskListener listener,
         final Iterable<String> params,
         final FilePath scaRunnerLocation) {
-        final String longString = generateCmdString(params, scaRunnerLocation.getRemote());
         final Map<String, String> vars = getEnvironmentVariables(build, listener);
         final ProcStarter procStarter = launcher.new ProcStarter();
         procStarter.envs(vars);
-
-        procStarter.cmdAsSingleString(longString).stdout(listener.getLogger()).stderr(listener.getLogger())
-                   .pwd(build.getWorkspace());
-        return procStarter;
-    }
-
-    private String generateCmdString(final Iterable<String> params, final String sqlCiLocation) {
-        final StringBuilder longStringBuilder = new StringBuilder();
-
-        longStringBuilder.append("\"").append(getPowerShellExeLocation())
-                         .append("\" -NonInteractive -ExecutionPolicy Bypass -File \"").append(sqlCiLocation)
-                         .append("\"").append(" -Verbose");
-
-        // Here we do some parameter fiddling. Existing quotes must be escaped with three slashes
-        // Then, we need to surround the part on the right of the = with quotes iff it has a space.
-        for (final String param : params) {
-            // Trailing spaces can be a problem, so trim string.
-            String fixedParam = param.trim();
-
-            // Put 3 slashes before quotes (argh!!!!)
-            if (fixedParam.contains("\"")) {
-                fixedParam = fixedParam.replace("\"", "\\\\\\\"");
+        
+        ArgumentListBuilder argumentsBuilder = new ArgumentListBuilder();
+        argumentsBuilder.add(getPowerShellExeLocation());
+        argumentsBuilder.add("-NonInteractive");
+        argumentsBuilder.add("-ExecutionPolicy");
+        argumentsBuilder.add("Bypass");
+        argumentsBuilder.add("-File");
+        argumentsBuilder.add(scaRunnerLocation.getRemote());
+        argumentsBuilder.add("-Verbose");
+        
+        boolean foundTemporaryDatabasePassword = false;
+        for (String parameter : params)
+        {
+            if (foundTemporaryDatabasePassword) {
+                foundTemporaryDatabasePassword = false;
+                argumentsBuilder.add(parameter, true);
+                continue;
             }
 
-            // If there are spaces, surround bit after = with quotes
-            if (fixedParam.contains(" ")) {
-                fixedParam = "\"" + fixedParam + "\"";
+            argumentsBuilder.add(parameter);
+            
+            if (parameter.contains("temporaryDatabasePassword")) {
+                foundTemporaryDatabasePassword = true;
             }
-
-            longStringBuilder.append(" ").append(fixedParam);
         }
-
-        return longStringBuilder.toString();
+        
+        procStarter.cmds(argumentsBuilder).stdout(listener.getLogger()).stderr(listener.getLogger())
+            .pwd(build.getWorkspace());
+        return procStarter;
     }
 
     private Map<String, String> getEnvironmentVariables(final AbstractBuild<?, ?> build, final TaskListener listener) {
