@@ -10,6 +10,7 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import hudson.util.Secret;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -80,9 +81,13 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         return username;
     }
 
-    private final String password;
+    private Secret password;
 
-    public String getPassword() {
+    public void setPassword(Secret password) { 
+        this.password = password;
+    }
+
+    public Secret getPassword() {
         return password;
     }
 
@@ -170,7 +175,7 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
             serverName = "";
             serverAuth = null;
             username = "";
-            password = "";
+            password = Secret.fromString("");
         }
 
         this.options = options;
@@ -245,7 +250,7 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
                 params.add("-temporaryDatabaseUserName");
                 params.add(getUsername());
                 params.add("-temporaryDatabasePassword");
-                params.add(getPassword());
+                params.add(getPassword().getPlainText());
             }
         }
 

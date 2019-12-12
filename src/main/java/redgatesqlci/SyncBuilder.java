@@ -8,6 +8,7 @@ import hudson.model.BuildListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
+import hudson.util.Secret;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -49,9 +50,13 @@ public class SyncBuilder extends SqlContinuousIntegrationBuilder {
         return username;
     }
 
-    private final String password;
-
-    public String getPassword() {
+    private Secret password;
+    
+    public void setPassword(Secret password) { 
+        this.password = password;
+    }
+    
+    public Secret getPassword() {
         return password;
     }
 
@@ -151,7 +156,7 @@ public class SyncBuilder extends SqlContinuousIntegrationBuilder {
             params.add("-databaseUserName");
             params.add(getUsername());
             params.add("-databasePassword");
-            params.add(getPassword());
+            params.add(getPassword().getPlainText());
         }
 
         if (!options.isEmpty()) {

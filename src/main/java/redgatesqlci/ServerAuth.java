@@ -1,11 +1,12 @@
 package redgatesqlci;
 
+import hudson.util.Secret;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class ServerAuth {
     private final String value;
     private final String username;
-    private final String password;
+    private final Secret password;
 
     public String getvalue() {
         return value;
@@ -15,12 +16,12 @@ public class ServerAuth {
         return username;
     }
 
-    public String getPassword() {
+    public Secret getPassword() {
         return password;
     }
 
     @DataBoundConstructor
-    public ServerAuth(final String value, final String username, final String password) {
+    public ServerAuth(final String value, final String username, final Secret password) {
         this.value = value;
         this.username = username;
         this.password = password;
