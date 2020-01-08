@@ -17,7 +17,7 @@
       <f:textbox/>
     </f:entry>
     <f:entry title="NuGet Feed API Key:" field="nugetFeedApiKey">
-      <f:textbox/>
+      <f:password/>
     </f:entry>
   </f:section>
 

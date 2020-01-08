@@ -8,6 +8,7 @@ import hudson.model.BuildListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
+import hudson.util.Secret;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -31,9 +32,13 @@ public class PublishBuilder extends SqlContinuousIntegrationBuilder {
         return nugetFeedUrl;
     }
 
-    private final String nugetFeedApiKey;
+    private Secret nugetFeedApiKey;
 
-    public String getNugetFeedApiKey() {
+    public void setNugetFeedApiKey(Secret nugetFeedApiKey) { 
+        this.nugetFeedApiKey = nugetFeedApiKey;
+    }
+
+    public Secret getNugetFeedApiKey() {
         return nugetFeedApiKey;
     }
 
@@ -53,7 +58,7 @@ public class PublishBuilder extends SqlContinuousIntegrationBuilder {
     public PublishBuilder(
         final String packageid,
         final String nugetFeedUrl,
-        final String nugetFeedApiKey,
+        final Secret nugetFeedApiKey,
         final String packageVersion,
         final SqlChangeAutomationVersionOption sqlChangeAutomationVersionOption) {
         this.packageid = packageid;
@@ -82,9 +87,10 @@ public class PublishBuilder extends SqlContinuousIntegrationBuilder {
         params.add("-nugetFeedUrl");
         params.add(getNugetFeedUrl());
 
-        if (!getNugetFeedApiKey().isEmpty()) {
+        final String nugetKey = getNugetFeedApiKey().getPlainText();
+        if (!nugetKey.isEmpty()) {
             params.add("-nugetFeedApiKey");
-            params.add(getNugetFeedApiKey());
+            params.add(nugetKey);
         }
 
         addProductVersionParameter(params, sqlChangeAutomationVersionOption);

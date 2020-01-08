@@ -82,19 +82,19 @@ abstract class SqlContinuousIntegrationBuilder extends Builder {
         argumentsBuilder.add(scaRunnerLocation.getRemote());
         argumentsBuilder.add("-Verbose");
         
-        boolean foundTemporaryDatabasePassword = false;
+        boolean foundParameterToMask = false;
         for (String parameter : params)
         {
-            if (foundTemporaryDatabasePassword) {
-                foundTemporaryDatabasePassword = false;
+            if (foundParameterToMask) {
+                foundParameterToMask = false;
                 argumentsBuilder.add(parameter, true);
                 continue;
             }
 
             argumentsBuilder.add(parameter);
-            
-            if (parameter.contains("temporaryDatabasePassword")) {
-                foundTemporaryDatabasePassword = true;
+
+            if (parameter.contains("temporaryDatabasePassword") || parameter.contains("nugetFeedApiKey")) {
+                foundParameterToMask = true;
             }
         }
         
