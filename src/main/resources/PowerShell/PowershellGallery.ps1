@@ -91,6 +91,7 @@ function CheckRequiredDotNetVersionIsInstalled {
 function InstallPowerShellGet {
     [CmdletBinding()]
     Param()
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
     $psget = GetHighestInstalledModule PowerShellGet
     if (!$psget)
     {
