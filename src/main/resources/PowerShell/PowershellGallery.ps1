@@ -91,7 +91,10 @@ function CheckRequiredDotNetVersionIsInstalled {
 function InstallPowerShellGet {
     [CmdletBinding()]
     Param()
+	
+    ConfigureProxyIfEnvironmentVariableSet
     [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+
     $psget = GetHighestInstalledModule PowerShellGet
     if (!$psget)
     {
@@ -174,5 +177,15 @@ function GetHighestInstallableModule {
     }
     catch {
         Write-Warning "Could not find any suitable versions of $moduleName from any registered PSRepository"
+    }
+}
+
+function ConfigureProxyIfEnvironmentVariableSet {
+    if (Test-Path env:REDGATE_PROXY_URL) {
+        Write-Debug "Setting DefaultWebProxy to $env:REDGATE_PROXY_URL"
+
+        [System.Net.WebRequest]::DefaultWebProxy = New-Object System.Net.WebProxy($env:REDGATE_PROXY_URL)
+        [System.Net.WebRequest]::DefaultWebProxy.credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
+        [System.Net.WebRequest]::DefaultWebProxy.BypassProxyOnLocal = $True
     }
 }
