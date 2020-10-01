@@ -471,7 +471,7 @@ function TestDatabase
 
     $connectionOptions = @{
     }
-    if (AreConnectionOptionsHandled($temporaryDatabaseEncryptConnection, $temporarTestSourceOptionyDatabaseTrustServerCertificate)){
+    if (AreConnectionOptionsHandled($temporaryDatabaseEncryptConnection, $temporaryDatabaseTrustServerCertificate)){
         $connectionOptions += @{ 'Encrypt' = $temporaryDatabaseEncryptConnection.ToBool() }
         $connectionOptions += @{ 'TrustServerCertificate' = $temporaryDatabaseTrustServerCertificate.ToBool() }
     }
