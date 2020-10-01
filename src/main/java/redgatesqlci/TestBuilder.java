@@ -82,6 +82,18 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
         return password;
     }
 
+    private final boolean encryptConnection;
+
+    public boolean getEncryptConnection() {
+        return encryptConnection;
+    }
+
+    private final boolean trustServerCertificate;
+
+    public boolean getTrustServerCertificate() {
+        return trustServerCertificate;
+    }
+
     private final String options;
 
     public String getOptions() {
@@ -171,6 +183,8 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
             serverAuth = tempServer.getServerAuth().getvalue();
             username = tempServer.getServerAuth().getUsername();
             password = tempServer.getServerAuth().getPassword();
+            encryptConnection = tempServer.getEncryptConnection();
+            trustServerCertificate = tempServer.getTrustServerCertificate();
         }
         else {
             dbName = "";
@@ -178,6 +192,8 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
             serverAuth = null;
             username = "";
             password = Secret.fromString("");
+            encryptConnection = false;
+            trustServerCertificate = false;
         }
 
         if ("runOnlyTest".equals(this.runTestSet)) {
@@ -229,6 +245,14 @@ public class TestBuilder extends SqlContinuousIntegrationBuilder {
                 params.add(getUsername());
                 params.add("-temporaryDatabasePassword");
                 params.add(getPassword().getPlainText());
+            }
+
+            if (encryptConnection) {
+                params.add("-temporaryDatabaseEncryptConnection");
+            }
+
+            if (trustServerCertificate) {
+                params.add("-temporaryDatabaseTrustServerCertificate");
             }
         }
 

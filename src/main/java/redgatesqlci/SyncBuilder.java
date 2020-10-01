@@ -60,6 +60,18 @@ public class SyncBuilder extends SqlContinuousIntegrationBuilder {
         return password;
     }
 
+    private final boolean encryptConnection;
+
+    public boolean getEncryptConnection() {
+        return encryptConnection;
+    }
+
+    private final boolean trustServerCertificate;
+
+    public boolean getTrustServerCertificate() {
+        return trustServerCertificate;
+    }
+
     private final String options;
 
     public String getOptions() {
@@ -108,6 +120,8 @@ public class SyncBuilder extends SqlContinuousIntegrationBuilder {
         final String serverName,
         final String dbName,
         final ServerAuth serverAuth,
+        final boolean encryptConnection,
+        final boolean trustServerCertificate,
         final String options,
         final String dataOptions,
         final String filter,
@@ -121,6 +135,8 @@ public class SyncBuilder extends SqlContinuousIntegrationBuilder {
         this.serverAuth = serverAuth.getvalue();
         username = serverAuth.getUsername();
         password = serverAuth.getPassword();
+        this.encryptConnection = encryptConnection;
+        this.trustServerCertificate = trustServerCertificate;
         this.options = options;
         this.dataOptions = dataOptions;
         this.filter = filter;
@@ -157,6 +173,14 @@ public class SyncBuilder extends SqlContinuousIntegrationBuilder {
             params.add(getUsername());
             params.add("-databasePassword");
             params.add(getPassword().getPlainText());
+        }
+
+        if (encryptConnection) {
+            params.add("-encryptConnection");
+        }
+
+        if (trustServerCertificate) {
+            params.add("-trustServerCertificate");
         }
 
         if (!options.isEmpty()) {

@@ -7,6 +7,8 @@ public class Server {
     private final String serverName;
     private final String dbName;
     private final ServerAuth serverAuth;
+    final boolean encryptConnection;
+    final boolean trustServerCertificate;
 
     public String getvalue() {
         return value;
@@ -24,11 +26,27 @@ public class Server {
         return serverAuth;
     }
 
+    public boolean getEncryptConnection() {
+        return encryptConnection;
+    }
+
+    public boolean getTrustServerCertificate() {
+        return trustServerCertificate;
+    }
+
     @DataBoundConstructor
-    public Server(final String value, final String serverName, final String dbName, final ServerAuth serverAuth) {
+    public Server(
+        final String value,
+        final String serverName,
+        final String dbName,
+        final ServerAuth serverAuth,
+        final boolean encryptConnection,
+        final boolean trustServerCertificate) {
         this.value = value;
         this.serverName = serverName;
         this.dbName = dbName;
         this.serverAuth = serverAuth;
+        this.encryptConnection = encryptConnection;
+        this.trustServerCertificate = trustServerCertificate;
     }
 }

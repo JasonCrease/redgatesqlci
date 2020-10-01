@@ -12,6 +12,7 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -83,12 +84,24 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
 
     private Secret password;
 
-    public void setPassword(Secret password) { 
+    public void setPassword(Secret password) {
         this.password = password;
     }
 
     public Secret getPassword() {
         return password;
+    }
+
+    private final boolean encryptConnection;
+
+    public boolean getEncryptConnection() {
+        return encryptConnection;
+    }
+
+    private final boolean trustServerCertificate;
+
+    public boolean getTrustServerCertificate() {
+        return trustServerCertificate;
     }
 
     private final String options;
@@ -170,12 +183,17 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
             serverAuth = tempServer.getServerAuth().getvalue();
             username = tempServer.getServerAuth().getUsername();
             password = tempServer.getServerAuth().getPassword();
-        } else {
+            encryptConnection = tempServer.getEncryptConnection();
+            trustServerCertificate = tempServer.getTrustServerCertificate();
+        }
+        else {
             dbName = "";
             serverName = "";
             serverAuth = null;
             username = "";
             password = Secret.fromString("");
+            encryptConnection = false;
+            trustServerCertificate = false;
         }
 
         this.options = options;
@@ -188,7 +206,8 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         if (getSendToDlmDashboard()) {
             dlmDashboardHost = dlmDashboard.getDlmDashboardHost();
             dlmDashboardPort = dlmDashboard.getDlmDashboardPort();
-        } else {
+        }
+        else {
             dlmDashboardHost = null;
             dlmDashboardPort = null;
         }
@@ -212,7 +231,8 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         if (getPackageVersion() == null || getPackageVersion().isEmpty()) {
             params.add("-packageVersion");
             params.add("1.0." + build.getNumber());
-        } else {
+        }
+        else {
             params.add("-packageVersion");
             params.add(getPackageVersion());
         }
@@ -251,6 +271,14 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
                 params.add(getUsername());
                 params.add("-temporaryDatabasePassword");
                 params.add(getPassword().getPlainText());
+            }
+
+            if (encryptConnection) {
+                params.add("-temporaryDatabaseEncryptConnection");
+            }
+
+            if (trustServerCertificate) {
+                params.add("-temporaryDatabaseTrustServerCertificate");
             }
         }
 
@@ -323,11 +351,11 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
 
         public ListBoxModel doFillTransactionIsolationLevelItems() {
             return Arrays.stream(TransactionIsolationLevel.values())
-                    .map(transactionIsolationLevel ->
-                            new ListBoxModel.Option(
-                                    transactionIsolationLevel.getDisplayName(),
-                                    transactionIsolationLevel.name()))
-                    .collect(Collectors.toCollection(ListBoxModel::new));
+                         .map(transactionIsolationLevel ->
+                                  new ListBoxModel.Option(
+                                      transactionIsolationLevel.getDisplayName(),
+                                      transactionIsolationLevel.name()))
+                         .collect(Collectors.toCollection(ListBoxModel::new));
         }
 
         // Since the AJAX callbacks don't give the value of radioblocks, I can't validate the value of the server and
