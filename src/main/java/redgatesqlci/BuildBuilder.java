@@ -228,7 +228,7 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         params.add("-packageId");
         params.add(getPackageid());
 
-        if (getPackageVersion() == null || getPackageVersion().isEmpty()) {
+        if (StringUtils.isEmpty(getPackageVersion())) {
             params.add("-packageVersion");
             params.add("1.0." + build.getNumber());
         }
@@ -237,12 +237,12 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
             params.add(getPackageVersion());
         }
 
-        if (!options.isEmpty()) {
+        if (StringUtils.isNotEmpty(options)) {
             params.add("-Options");
             params.add(getEscapedOptions(options));
         }
 
-        if (!dataOptions.isEmpty()) {
+        if (StringUtils.isNotEmpty(dataOptions)) {
             params.add("-DataOptions");
             params.add(getEscapedOptions(dataOptions));
         }
@@ -252,7 +252,7 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
             params.add(transactionIsolationLevel.name());
         }
 
-        if (!filter.isEmpty()) {
+        if (StringUtils.isNotEmpty(filter)) {
             params.add("-filter");
             params.add(getFilter());
         }
@@ -260,7 +260,7 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         if ("sqlServer".equals(getTempServer())) {
             params.add("-temporaryDatabaseServer");
             params.add(getServerName());
-            if (!getDbName().isEmpty()) {
+            if (StringUtils.isNotEmpty(getDbName())) {
                 params.add("-temporaryDatabaseName");
                 params.add(getDbName());
             }
@@ -343,7 +343,7 @@ public class BuildBuilder extends SqlContinuousIntegrationBuilder {
         }
 
         public FormValidation doCheckPackageid(@QueryParameter final String value) {
-            if (value.isEmpty()) {
+            if (StringUtils.isEmpty(value)) {
                 return FormValidation.error("Enter a package ID.");
             }
             return FormValidation.ok();

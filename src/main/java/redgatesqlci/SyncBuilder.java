@@ -10,6 +10,7 @@ import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -151,7 +152,7 @@ public class SyncBuilder extends SqlContinuousIntegrationBuilder {
         final Collection<String> params = new ArrayList<>();
 
         String buildNumber = "1.0." + Integer.toString(build.getNumber());
-        if (getPackageVersion() != null && !getPackageVersion().isEmpty()) {
+        if (StringUtils.isNotEmpty(getPackageVersion())) {
             buildNumber = getPackageVersion();
         }
 
@@ -183,22 +184,22 @@ public class SyncBuilder extends SqlContinuousIntegrationBuilder {
             params.add("-trustServerCertificate");
         }
 
-        if (!options.isEmpty()) {
+        if (StringUtils.isNotEmpty(options)) {
             params.add("-Options");
             params.add(options);
         }
 
-        if (!dataOptions.isEmpty()) {
+        if (StringUtils.isNotEmpty(dataOptions)) {
             params.add("-DataOptions");
             params.add(dataOptions);
         }
 
-        if (!getFilter().isEmpty()) {
+        if (StringUtils.isNotEmpty(getFilter())) {
             params.add("-filter");
             params.add(getFilter());
         }
 
-        if (!getIsolationLevel().isEmpty()) {
+        if (StringUtils.isNotEmpty(getIsolationLevel())) {
             params.add("-transactionIsolationLevel");
             params.add(getIsolationLevel());
         }
@@ -237,14 +238,14 @@ public class SyncBuilder extends SqlContinuousIntegrationBuilder {
         }
 
         public FormValidation doCheckPackageid(@QueryParameter final String packageid) {
-            if (packageid.isEmpty()) {
+            if (StringUtils.isEmpty(packageid)) {
                 return FormValidation.error("Enter a package ID");
             }
             return FormValidation.ok();
         }
 
         public FormValidation doCheckDbName(@QueryParameter final String dbName) {
-            if (dbName.isEmpty()) {
+            if (StringUtils.isEmpty(dbName)) {
                 return FormValidation.error("Enter a database name");
             }
             return FormValidation.ok();
@@ -252,7 +253,7 @@ public class SyncBuilder extends SqlContinuousIntegrationBuilder {
 
         public FormValidation doCheckServerName(
             @QueryParameter final String serverName) {
-            if (serverName.isEmpty()) {
+            if (StringUtils.isEmpty(serverName)) {
                 return FormValidation.error("Enter a server name");
             }
             return FormValidation.ok();
