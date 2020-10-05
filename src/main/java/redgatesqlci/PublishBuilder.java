@@ -10,6 +10,7 @@ import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -73,7 +74,7 @@ public class PublishBuilder extends SqlContinuousIntegrationBuilder {
         final Collection<String> params = new ArrayList<>();
 
         String buildNumber = "1.0." + Integer.toString(build.getNumber());
-        if (getPackageVersion() != null && !getPackageVersion().isEmpty()) {
+        if (StringUtils.isNotEmpty(getPackageVersion())) {
             buildNumber = getPackageVersion();
         }
 
@@ -88,7 +89,7 @@ public class PublishBuilder extends SqlContinuousIntegrationBuilder {
         params.add(getNugetFeedUrl());
 
         final String nugetKey = getNugetFeedApiKey().getPlainText();
-        if (!nugetKey.isEmpty()) {
+        if (StringUtils.isNotEmpty(nugetKey)) {
             params.add("-nugetFeedApiKey");
             params.add(nugetKey);
         }
@@ -122,7 +123,7 @@ public class PublishBuilder extends SqlContinuousIntegrationBuilder {
         }
 
         public FormValidation doCheckPackageid(@QueryParameter final String value) {
-            if (value.isEmpty()) {
+            if (StringUtils.isEmpty(value)) {
                 return FormValidation.error("Enter a package ID");
             }
             return FormValidation.ok();
@@ -130,7 +131,7 @@ public class PublishBuilder extends SqlContinuousIntegrationBuilder {
 
         public FormValidation doCheckNugetFeedUrl(
             @QueryParameter final String nugetFeedUrl) {
-            if (nugetFeedUrl.isEmpty()) {
+            if (StringUtils.isEmpty(nugetFeedUrl)) {
                 return FormValidation.error("Enter a NuGet package feed URL");
             }
             return FormValidation.ok();

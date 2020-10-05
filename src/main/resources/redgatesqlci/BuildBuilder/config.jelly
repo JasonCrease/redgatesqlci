@@ -72,6 +72,12 @@
                         </f:entry>
                     </f:nested>
                 </f:radioBlock>
+                <f:entry title="Encrypt:" field="encryptConnection">
+                    <f:checkbox checked="${instance.encryptConnection}"/>
+                </f:entry>
+                <f:entry title="Trust Server Certificate:" field="trustServerCertificate">
+                    <f:checkbox checked="${instance.trustServerCertificate}"/>
+                </f:entry>
             </f:nested>
         </f:radioBlock>
 

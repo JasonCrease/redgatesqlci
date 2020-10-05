@@ -37,7 +37,7 @@ if (!$PSBoundParameters.ContainsKey('ErrorAction'))
     $ErrorActionPreference = 'Stop'
 }
 
-$isNotImported = !(Get-Command New-DlmDatabaseConnection -ErrorAction SilentlyContinue)
+$isNotImported = !(Get-Command New-DatabaseConnection -ErrorAction SilentlyContinue)
 
 if ($isNotImported)
 {
@@ -61,6 +61,7 @@ if ($null -eq $powershellModule)
 }
 
 $minimumRequiredVersionDataCompareOptions = [version]'3.3.0'
+$minimumRequiredVersionTrustServerCertificate = [version]'4.3.20267'
 $currentVersion = $powershellModule.Version
 
 #region SQLCI operations
@@ -126,7 +127,13 @@ Run the equivalent of a SQL CI Build using the DLM Automation PowerShell module.
         [Parameter(ParameterSetName = 'sqlauth', Mandatory)]
         [string]$temporaryDatabasePassword,
 
-    # DLM Automation serial number. For help finding your serial number, see http://documentation.red-gate.com/display/XX/Licensing
+    # Indicates if the database connection should be encrypted using SSL.
+        [switch]$temporaryDatabaseEncryptConnection,
+
+    # Indicates if the server certificate should be verified when connecting to a database.
+        [switch]$temporaryDatabaseTrustServerCertificate,
+
+    # DLM Automation serial number. For help finding your serial number, see https://documentation.red-gate.com/display/XX/Licensing
     # If you don't enter a key, you'll start a 28 day free trial. Separate multiple serial numbers with commas without spaces.
         [string]$licenseSerialKey,
 
@@ -161,7 +168,7 @@ Run the equivalent of a SQL CI Build using the DLM Automation PowerShell module.
 
     if ($licenseSerialKey)
     {
-        Register-DlmSerialNumber $licenseSerialKey
+        Register-SqlChangeAutomation $licenseSerialKey
     }
 
     $temporaryConnection = BuildTemporaryConnection $temporaryDatabaseServer `
@@ -169,7 +176,9 @@ Run the equivalent of a SQL CI Build using the DLM Automation PowerShell module.
                                                     $temporaryDatabaseUserName `
                                                     $temporaryDatabasePassword `
                                                     $temporaryServerConnectionString `
-                                                    $temporaryDatabaseConnectionString
+                                                    $temporaryDatabaseConnectionString `
+                                                    $temporaryDatabaseEncryptConnection `
+                                                    $temporaryDatabaseTrustServerCertificate
 
     $queryBatchTimeoutArguments = @{ }
 
@@ -181,7 +190,7 @@ Run the equivalent of a SQL CI Build using the DLM Automation PowerShell module.
     $compareParams = CreateCompareParameters -filter $filter -compareOptions $Options -dataCompareOptions $DataOptions
 
     #validate the scripts folder
-    $validatedSchema = $scriptsFolder | Invoke-DlmDatabaseSchemaValidation @temporaryConnection @queryBatchTimeoutArguments @compareParams -TransactionIsolationLevel $transactionIsolationLevel
+    $validatedSchema = $scriptsFolder | Invoke-DatabaseBuild @temporaryConnection @queryBatchTimeoutArguments @compareParams -TransactionIsolationLevel $transactionIsolationLevel
 
     $dlmDatabasePackageArgs = @{ 'PackageId' = $packageId; 'PackageVersion' = $packageVersion }
 
@@ -189,17 +198,17 @@ Run the equivalent of a SQL CI Build using the DLM Automation PowerShell module.
     {
 
         #build the documentation
-        $documentation = $validatedSchema | New-DlmDatabaseDocumentation @temporaryConnection @compareParams
+        $documentation = $validatedSchema | New-DatabaseDocumentation @temporaryConnection @compareParams
 
         #and add it to the arguments for the packaging process
         $dlmDatabasePackageArgs += @{ 'Documentation' = $documentation }
     }
 
     #now build the package
-    $databasePackage = $validatedSchema | New-DlmDatabasePackage @dlmDatabasePackageArgs
+    $databasePackage = $validatedSchema | New-DatabaseBuildArtifact @dlmDatabasePackageArgs
 
     #save it to disk
-    Export-DlmDatabasePackage $databasePackage -Path $outputFolder
+    Export-DatabaseBuildArtifact $databasePackage -Path $outputFolder
 
     if ($dlmDashboardHost)
     {
@@ -218,7 +227,7 @@ Run the equivalent of a SQL CI Build using the DLM Automation PowerShell module.
 
         try
         {
-            Publish-DlmDatabasePackage $databasePackage -DlmDashboardUrl $uri
+            Publish-DatabaseBuildArtifact $databasePackage -DlmDashboardUrl $uri
             Write-Output "Published '$( $databasePackage.Name )' to DLM Dashboard at $uri"
         }
         catch
@@ -266,6 +275,12 @@ Run the equivalent of a SQL CI Test using the DLM Automation PowerShell module.
         [Parameter(ParameterSetName = 'sqlauth', Mandatory)]
         [string]$temporaryDatabasePassword,
 
+    # Indicates if the database connection should be encrypted using SSL.
+        [switch]$temporaryDatabaseEncryptConnection,
+
+    # Indicates if the server certificate should be verified when connecting to a database.
+        [switch]$temporaryDatabaseTrustServerCertificate,
+
     # Populate database with test data. The path to a SQL Data Generator project file. The path must be relative to the VCS root.
         [alias("sqlDataGeneratorProject")]
         [string]$sqlDataGenerator,
@@ -276,7 +291,7 @@ Run the equivalent of a SQL CI Test using the DLM Automation PowerShell module.
     # SQL Data Compare options. You can turn off the default options or specify additional SQL Data Compare options.
         [string]$DataOptions,
 
-    # DLM Automation serial number. For help finding your serial number, see http://documentation.red-gate.com/display/XX/Licensing
+    # DLM Automation serial number. For help finding your serial number, see https://documentation.red-gate.com/display/XX/Licensing
     # If you don't enter a key, you'll start a 28 day free trial. Separate multiple serial numbers with commas without spaces.
         [string]$licenseSerialKey,
 
@@ -309,7 +324,7 @@ Run the equivalent of a SQL CI Test using the DLM Automation PowerShell module.
 
     if ($licenseSerialKey)
     {
-        Register-DlmSerialNumber $licenseSerialKey
+        Register-SqlChangeAutomation $licenseSerialKey
     }
 
     $temporaryConnection = BuildTemporaryConnection $temporaryDatabaseServer `
@@ -317,7 +332,9 @@ Run the equivalent of a SQL CI Test using the DLM Automation PowerShell module.
                                                     $temporaryDatabaseUserName `
                                                     $temporaryDatabasePassword `
                                                     $temporaryServerConnectionString `
-                                                    $temporaryDatabaseConnectionString
+                                                    $temporaryDatabaseConnectionString `
+                                                    $temporaryDatabaseEncryptConnection `
+                                                    $temporaryDatabaseTrustServerCertificate
 
     $dataGeneratorArguments = @{ }
 
@@ -349,15 +366,15 @@ Run the equivalent of a SQL CI Test using the DLM Automation PowerShell module.
 
     $compareParams = CreateCompareParameters -filter $filter -compareOptions $Options -dataCompareOptions $DataOptions
 
-    $testResults = $package | Invoke-DlmDatabaseTests @temporaryConnection `
+    $testResults = $package | Invoke-DatabaseTests @temporaryConnection `
                                                       @dataGeneratorArguments `
                                                       @runOnlyArguments `
                                                       @queryBatchTimeoutArguments `
                                                       @compareParams
 
     # Export the test results to disk in all the supported formats
-    $testResults | Export-DlmDatabaseTestResults -OutputFile (Join-Path $outputFolder "$testResultsFileName.junit.xml") -Format JUnit -Force
-    $testResults | Export-DlmDatabaseTestResults -OutputFile (Join-Path $outputFolder "$testResultsFileName.trx") -Format MsTest -Force
+    $testResults | Export-DatabaseTestResults -OutputFile (Join-Path $outputFolder "$testResultsFileName.junit.xml") -Format JUnit -Force
+    $testResults | Export-DatabaseTestResults -OutputFile (Join-Path $outputFolder "$testResultsFileName.trx") -Format MsTest -Force
 
     # write the test results to the output stream
     Write-Output $testResults
@@ -408,6 +425,12 @@ function TestDatabase
         [Parameter(ParameterSetName = 'sqlauth', Mandatory)]
         [string]$temporaryDatabasePassword,
 
+    # Indicates if the database connection should be encrypted using SSL.
+        [switch]$temporaryDatabaseEncryptConnection,
+
+    # Indicates if the server certificate should be verified when connecting to a database.
+        [switch]$temporaryDatabaseTrustServerCertificate,
+
     # Populate database with test data. The path to a SQL Data Generator project file. The path must be relative to the VCS root.
         [alias("sqlDataGeneratorProject")]
         [string]$sqlDataGenerator,
@@ -418,7 +441,7 @@ function TestDatabase
     # SQL Data Compare options. You can turn off the default options or specify additional SQL Data Compare options.
         [string]$DataOptions,
 
-    # DLM Automation serial number. For help finding your serial number, see http://documentation.red-gate.com/display/XX/Licensing
+    # DLM Automation serial number. For help finding your serial number, see https://documentation.red-gate.com/display/XX/Licensing
     # If you don't enter a key, you'll start a 28 day free trial. Separate multiple serial numbers with commas without spaces.
         [string]$licenseSerialKey,
 
@@ -443,20 +466,29 @@ function TestDatabase
 
     if ($licenseSerialKey)
     {
-        Register-DlmSerialNumber $licenseSerialKey
+        Register-SqlChangeAutomation $licenseSerialKey
+    }
+
+    $connectionOptions = @{
+    }
+    if (AreConnectionOptionsHandled($temporaryDatabaseEncryptConnection, $temporaryDatabaseTrustServerCertificate)){
+        $connectionOptions += @{ 'Encrypt' = $temporaryDatabaseEncryptConnection.ToBool() }
+        $connectionOptions += @{ 'TrustServerCertificate' = $temporaryDatabaseTrustServerCertificate.ToBool() }
     }
 
     $databaseConnection = $null;
     if ($temporaryDatabaseUserName -And $temporaryDatabasePassword)
     {
-        $databaseConnection = New-DlmDatabaseConnection -ServerInstance $temporaryDatabaseServer `
+        $databaseConnection = New-DatabaseConnection @connectionOptions `
+                                                            -ServerInstance $temporaryDatabaseServer `
                                                             -Database $temporaryDatabaseName `
                                                             -Username $temporaryDatabaseUserName `
                                                             -Password $temporaryDatabasePassword
     }
     else
     {
-        $databaseConnection = New-DlmDatabaseConnection -ServerInstance $temporaryDatabaseServer `
+        $databaseConnection = New-DatabaseConnection @connectionOptions `
+                                                            -ServerInstance $temporaryDatabaseServer `
                                                             -Database $temporaryDatabaseName
     }
 
@@ -490,14 +522,14 @@ function TestDatabase
 
     $compareParams = CreateCompareParameters -filter $filter -compareOptions $Options -dataCompareOptions $DataOptions
 
-    $testResults = $databaseConnection | Invoke-DlmDatabaseTests @dataGeneratorArguments `
+    $testResults = $databaseConnection | Invoke-DatabaseTests @dataGeneratorArguments `
                                                                      @runOnlyArguments `
                                                                      @queryBatchTimeoutArguments `
                                                                      @compareParams
 
     # Export the test results to disk in all the supported formats
-    $testResults | Export-DlmDatabaseTestResults -OutputFile (Join-Path $outputFolder "$testResultsFileName.junit.xml") -Format JUnit -Force
-    $testResults | Export-DlmDatabaseTestResults -OutputFile (Join-Path $outputFolder "$testResultsFileName.trx") -Format MsTest -Force
+    $testResults | Export-DatabaseTestResults -OutputFile (Join-Path $outputFolder "$testResultsFileName.junit.xml") -Format JUnit -Force
+    $testResults | Export-DatabaseTestResults -OutputFile (Join-Path $outputFolder "$testResultsFileName.trx") -Format MsTest -Force
 
     # write the test results to the output stream
     Write-Output $testResults
@@ -547,7 +579,13 @@ Run the equivalent of a SQL CI Sync using the DLM Automation PowerShell module.
         [Parameter(ParameterSetName = 'sqlauth', Mandatory)]
         [string]$databasePassword,
 
-    # DLM Automation serial number. For help finding your serial number, see http://documentation.red-gate.com/display/XX/Licensing
+    # Indicates if the database connection should be encrypted using SSL.
+        [switch]$encryptConnection,
+
+    # Indicates if the server certificate should be verified when connecting to a database.
+        [switch]$trustServerCertificate,
+
+    # DLM Automation serial number. For help finding your serial number, see https://documentation.red-gate.com/display/XX/Licensing
     # If you don't enter a key, you'll start a 28 day free trial. Separate multiple serial numbers with commas without spaces.
         [string]$licenseSerialKey,
 
@@ -589,7 +627,7 @@ Run the equivalent of a SQL CI Sync using the DLM Automation PowerShell module.
 
     if ($licenseSerialKey)
     {
-        Register-DlmSerialNumber $licenseSerialKey
+        Register-SqlChangeAutomation $licenseSerialKey
     }
 
     if ($databaseConnectionString)
@@ -598,7 +636,13 @@ Run the equivalent of a SQL CI Sync using the DLM Automation PowerShell module.
     }
     else
     {
-        $targetDatabaseConnection = New-DlmDatabaseConnection -ServerInstance $databaseServer -Database $databaseName -Username $databaseUserName -Password $databasePassword
+        $connectionOptions = @{
+        }
+        if (AreConnectionOptionsHandled($encryptConnection, $trustServerCertificate)){
+            $connectionOptions += @{ 'Encrypt' = $encryptConnection.ToBool() }
+            $connectionOptions += @{ 'TrustServerCertificate' = $trustServerCertificate.ToBool() }
+        }
+        $targetDatabaseConnection = New-DatabaseConnection @connectionOptions -ServerInstance $databaseServer -Database $databaseName -Username $databaseUserName -Password $databasePassword
     }
 
     $transactionIsolationLevel = $transactionIsolationLevel -replace ' '
@@ -612,7 +656,7 @@ Run the equivalent of a SQL CI Sync using the DLM Automation PowerShell module.
 
     $compareParams = CreateCompareParameters -filter $filter -compareOptions $Options -dataCompareOptions $DataOptions
 
-    $syncResult = Sync-DlmDatabaseSchema @queryBatchTimeoutArguments `
+    $syncResult = Sync-DatabaseSchema @queryBatchTimeoutArguments `
                                        @compareParams `
                                          -Source $package `
                                          -Target $targetDatabaseConnection `
@@ -650,14 +694,14 @@ Run the equivalent of a SQL CI Publish using the DLM Automation PowerShell modul
     # NuGet feed API key. Ignore this if you're using a public NuGet feed.
         [string]$nugetFeedApiKey,
 
-    # DLM Automation serial number. For help finding your serial number, see http://documentation.red-gate.com/display/XX/Licensing
+    # DLM Automation serial number. For help finding your serial number, see https://documentation.red-gate.com/display/XX/Licensing
     # If you don't enter a key, you'll start a 28 day free trial. Separate multiple serial numbers with commas without spaces.
         [string]$licenseSerialKey
     )
 
     if ($licenseSerialKey)
     {
-        Register-DlmSerialNumber $licenseSerialKey
+        Register-SqlChangeAutomation $licenseSerialKey
     }
 
     $publishArgs = @{ 'NuGetFeedUrl' = $nugetFeedUrl }
@@ -666,7 +710,7 @@ Run the equivalent of a SQL CI Publish using the DLM Automation PowerShell modul
         $publishArgs += @{ 'NuGetApiKey' = $nugetFeedApiKey }
     }
 
-    Import-DlmDatabasePackage $package | Publish-DlmDatabasePackage @publishArgs
+    Import-DatabaseBuildArtifact $package | Publish-DatabaseBuildArtifact @publishArgs
 }
 
 function Activate
@@ -680,20 +724,20 @@ Run the equivalent of a SQL CI Activate using the DLM Automation PowerShell modu
     [CmdletBinding()]
     param
     (
-    # DLM Automation serial number. For help finding your serial number, see http://documentation.red-gate.com/display/XX/Licensing
+    # DLM Automation serial number. For help finding your serial number, see https://documentation.red-gate.com/display/XX/Licensing
     # If you don't enter a key, you'll start a 28 day free trial. Separate multiple serial numbers with commas without spaces.
         [Parameter(Mandatory)]
         [string]$licenseSerialKey
     )
 
-    Register-DlmSerialNumber $licenseSerialKey
+    Register-SqlChangeAutomation $licenseSerialKey
 }
 
 #endregion
 
 #region Helper functions
 
-function BuildTemporaryConnection($temporaryDatabaseServer, $temporaryDatabaseName, $temporaryDatabaseUserName, $temporaryDatabasePassword, $temporaryServerConnectionString, $temporaryDatabaseConnectionString)
+function BuildTemporaryConnection($temporaryDatabaseServer, $temporaryDatabaseName, $temporaryDatabaseUserName, $temporaryDatabasePassword, $temporaryServerConnectionString, $temporaryDatabaseConnectionString, $temporaryDatabaseEncryptConnection, $temporaryDatabaseTrustServerCertificate)
 {
 
     if ($temporaryServerConnectionString)
@@ -711,10 +755,18 @@ function BuildTemporaryConnection($temporaryDatabaseServer, $temporaryDatabaseNa
         return @{ }
     }
 
+    $connectionOptions = @{
+    }
+    if (AreConnectionOptionsHandled($temporaryDatabaseEncryptConnection, $temporaryDatabaseTrustServerCertificate)){
+        $connectionOptions += @{ 'Encrypt' = $temporaryDatabaseEncryptConnection.ToBool() }
+        $connectionOptions += @{ 'TrustServerCertificate' = $temporaryDatabaseTrustServerCertificate.ToBool() }
+    }
+
     if ($temporaryDatabaseName)
     {
         return @{
-            'TemporaryDatabase' = New-DlmDatabaseConnection -ServerInstance $temporaryDatabaseServer `
+            'TemporaryDatabase' = New-DatabaseConnection @connectionOptions `
+                                                            -ServerInstance $temporaryDatabaseServer `
                                                             -Database $temporaryDatabaseName `
                                                             -Username $temporaryDatabaseUserName `
                                                             -Password $temporaryDatabasePassword
@@ -723,7 +775,8 @@ function BuildTemporaryConnection($temporaryDatabaseServer, $temporaryDatabaseNa
 
 
     return @{
-        'TemporaryDatabaseServer' = New-DlmDatabaseConnection -ServerInstance $temporaryDatabaseServer `
+        'TemporaryDatabaseServer' = New-DatabaseConnection @connectionOptions `
+                                                             -ServerInstance $temporaryDatabaseServer `
                                                              -Database 'unused' `
                                                              -Username $temporaryDatabaseUserName `
                                                              -Password $temporaryDatabasePassword
@@ -773,7 +826,7 @@ function CreateCompareParameters($filter, $compareOptions, $dataCompareOptions)
         FilterPath = $filter
     }
 
-    if ($currentVersion -ge $minimumRequiredVersionDataCompareOptions)
+    if ([string]::IsNullOrWhiteSpace($currentVersion) -or $currentVersion -ge $minimumRequiredVersionDataCompareOptions)
     {
         $parameters.SQLDataCompareOptions = $dataCompareOptions
     }
@@ -783,6 +836,19 @@ function CreateCompareParameters($filter, $compareOptions, $dataCompareOptions)
     }
 
     return $parameters
+}
+
+function AreConnectionOptionsHandled($encryptConnection, $trustServerCertificate)
+{
+    if ([string]::IsNullOrWhiteSpace($currentVersion) -or $currentVersion -ge $minimumRequiredVersionTrustServerCertificate)
+    {
+        return $true
+    }
+    elseif($encryptConnection -or $trustServerCertificate)
+    {
+        Write-Warning "Encrypt and TrustServerCertificate options require SQL Change Automation version $minimumRequiredVersionTrustServerCertificate or later. The current version is $currentVersion."
+        return $false
+    }
 }
 
 #endregion
