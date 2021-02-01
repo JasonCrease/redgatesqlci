@@ -58,9 +58,9 @@
                 <f:entry title="Server:" field="serverName">
                     <f:textbox/>
                 </f:entry>
-                <f:entry title="Database:" field="dbName">
-                    <f:textbox/>
-                </f:entry>
+				<f:entry title="Database: &lt;span style='cursor:pointer;' title='Specify an existing database if you wish to use the same database for each build.'&gt;&#9432;&lt;&#47;span&gt;" field="dbName">
+					<f:textbox/>
+				</f:entry>
                 <f:radioBlock name="serverAuth" title="Windows Authentication" value="windowsAuth"  checked="${instance.serverAuth == null || instance.serverAuth == 'windowsAuth'}"/>
                 <f:radioBlock name="serverAuth" title="SQL Server Authentication" value="sqlServerAuth"  checked="${!(instance.serverAuth == null || instance.serverAuth == 'windowsAuth')}">
                     <f:nested>
