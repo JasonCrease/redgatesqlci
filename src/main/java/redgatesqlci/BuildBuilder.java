@@ -9,132 +9,323 @@ import hudson.model.BuildListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
+import hudson.util.Secret;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+import redgatesqlci.DbFolder.ProjectOption;
 
-import javax.servlet.ServletException;
-import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Map;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
-public class BuildBuilder extends Builder {
+@SuppressWarnings({"unused", "WeakerAccess", "InstanceVariableOfConcreteClass"})
+public class BuildBuilder extends SqlContinuousIntegrationBuilder {
 
-    private String dbFolder;
-    public String getDbFolder() {
+    private final ProjectOption dbFolder;
+
+    public ProjectOption getDbFolder() {
         return dbFolder;
     }
 
-    private String subfolder;
+    private final String subfolder;
+
     public String getSubfolder() {
         return subfolder;
     }
 
+    private final String projectPath;
+
+    public String getProjectPath() {
+        return projectPath;
+    }
+
     private final String packageid;
+
     public String getPackageid() {
         return packageid;
     }
 
     private final String tempServer;
+
     public String getTempServer() {
         return tempServer;
     }
 
     private final String serverName;
+
     public String getServerName() {
         return serverName;
     }
 
     private final String dbName;
+
     public String getDbName() {
         return dbName;
     }
 
     private final String serverAuth;
+
     public String getServerAuth() {
         return serverAuth;
     }
 
     private final String username;
+
     public String getUsername() {
         return username;
     }
 
-    private final String password;
-    public String getPassword() {
+    private Secret password;
+
+    public void setPassword(Secret password) {
+        this.password = password;
+    }
+
+    public Secret getPassword() {
         return password;
     }
 
-    private final String additionalParams;
-    public String getAdditionalParams() {
-        return additionalParams;
+    private final boolean encryptConnection;
+
+    public boolean getEncryptConnection() {
+        return encryptConnection;
+    }
+
+    private final boolean trustServerCertificate;
+
+    public boolean getTrustServerCertificate() {
+        return trustServerCertificate;
+    }
+
+    private final String options;
+
+    public String getOptions() {
+        return options;
+    }
+
+    private final String dataOptions;
+
+    public String getDataOptions() {
+        return dataOptions;
+    }
+
+    private final TransactionIsolationLevel transactionIsolationLevel;
+
+    public TransactionIsolationLevel getTransactionIsolationLevel() {
+        return transactionIsolationLevel;
+    }
+
+    private final String filter;
+
+    public String getFilter() {
+        return filter;
+    }
+
+    private final String packageVersion;
+
+    public String getPackageVersion() {
+        return packageVersion;
+    }
+
+    private final boolean sendToDlmDashboard;
+
+    public boolean getSendToDlmDashboard() {
+        return sendToDlmDashboard;
+    }
+
+    private final String dlmDashboardHost;
+
+    public String getDlmDashboardHost() {
+        return dlmDashboardHost;
+    }
+
+    private final String dlmDashboardPort;
+
+    public String getDlmDashboardPort() {
+        return dlmDashboardPort;
+    }
+
+    private final SqlChangeAutomationVersionOption sqlChangeAutomationVersionOption;
+
+    public SqlChangeAutomationVersionOption getSqlChangeAutomationVersionOption() {
+        return sqlChangeAutomationVersionOption;
     }
 
     @DataBoundConstructor
-    public BuildBuilder(DbFolder dbFolder, String packageid, Server tempServer, String additionalParams) {
-        this.dbFolder = dbFolder.getvalue();
-        this.subfolder = dbFolder.getsubfolder();
+    public BuildBuilder(
+        final DbFolder dbFolder,
+        final String packageid,
+        final Server tempServer,
+        final String options,
+        final String dataOptions,
+        final TransactionIsolationLevel transactionIsolationLevel,
+        final String filter,
+        final String packageVersion,
+        final DlmDashboard dlmDashboard,
+        final SqlChangeAutomationVersionOption sqlChangeAutomationVersionOption) {
+        this.dbFolder = dbFolder.getValue();
+        subfolder = dbFolder.getSubfolder();
+        projectPath = dbFolder.getProjectPath();
         this.packageid = packageid;
         this.tempServer = tempServer.getvalue();
+        this.sqlChangeAutomationVersionOption = sqlChangeAutomationVersionOption;
 
-        if(this.tempServer.equals("sqlServer")) {
-            this.dbName = tempServer.getDbName();
-            this.serverName = tempServer.getServerName();
-            this.serverAuth = tempServer.getServerAuth().getvalue();
-            this.username = tempServer.getServerAuth().getUsername();
-            this.password = tempServer.getServerAuth().getPassword();
+        if ("sqlServer".equals(this.tempServer)) {
+            dbName = tempServer.getDbName();
+            serverName = tempServer.getServerName();
+            serverAuth = tempServer.getServerAuth().getvalue();
+            username = tempServer.getServerAuth().getUsername();
+            password = tempServer.getServerAuth().getPassword();
+            encryptConnection = tempServer.getEncryptConnection();
+            trustServerCertificate = tempServer.getTrustServerCertificate();
         }
-        else
-        {
-            this.dbName = "";
-            this.serverName = "";
-            this.serverAuth = "";
-            this.username = "";
-            this.password = "";
+        else {
+            dbName = "";
+            serverName = "";
+            serverAuth = null;
+            username = "";
+            password = Secret.fromString("");
+            encryptConnection = false;
+            trustServerCertificate = false;
         }
 
-        this.additionalParams = additionalParams;
+        this.options = options;
+        this.dataOptions = dataOptions;
+        this.transactionIsolationLevel = transactionIsolationLevel;
+        this.filter = filter;
+        this.packageVersion = packageVersion;
+
+        sendToDlmDashboard = dlmDashboard != null;
+        if (getSendToDlmDashboard()) {
+            dlmDashboardHost = dlmDashboard.getDlmDashboardHost();
+            dlmDashboardPort = dlmDashboard.getDlmDashboardPort();
+        }
+        else {
+            dlmDashboardHost = null;
+            dlmDashboardPort = null;
+        }
     }
 
     @Override
-    public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
-        ArrayList<String> params = new ArrayList<String>();
+    public boolean perform(final AbstractBuild build, final Launcher launcher, final BuildListener listener) {
+        final Collection<String> params = new ArrayList<>();
 
-        FilePath checkOutPath = build.getWorkspace();
-        params.add("BUILD");
-
-        if (getDbFolder().equals("subfolder")) {
-            params.add("/scriptsFolder=" + checkOutPath.getRemote()  + getSubfolder());
-        } else{
-            params.add("/scriptsFolder=" + checkOutPath.getRemote());
+        final FilePath checkOutPath = build.getWorkspace();
+        if (checkOutPath == null) {
+            return false;
         }
-        params.add("/packageId=" + getPackageid());
-        params.add("/packageVersion=0." + build.getNumber());
+        params.add("Build");
 
-        if (!additionalParams.isEmpty())
-            params.add("/additionalCompareArgs=\"" + getAdditionalParams() + "\"");
+        addProjectOptionParams(params, checkOutPath);
 
-        if (getTempServer().equals("sqlServer")) {
-            params.add("/temporaryDatabaseServer=" + getServerName());
-            params.add("/temporaryDatabaseName=" + getDbName());
+        params.add("-packageId");
+        params.add(getPackageid());
 
-            if (getServerAuth().equals("sqlServerAuth")) {
-                params.add("/temporaryDatabaseUserName=" + getUsername());
-                params.add("/temporaryDatabasePassword=" + getPassword());
+        if (StringUtils.isEmpty(getPackageVersion())) {
+            params.add("-packageVersion");
+            params.add("1.0." + build.getNumber());
+        }
+        else {
+            params.add("-packageVersion");
+            params.add(getPackageVersion());
+        }
+
+        if (StringUtils.isNotEmpty(options)) {
+            params.add("-Options");
+            params.add(getEscapedOptions(options));
+        }
+
+        if (StringUtils.isNotEmpty(dataOptions)) {
+            params.add("-DataOptions");
+            params.add(getEscapedOptions(dataOptions));
+        }
+
+        if (transactionIsolationLevel != null) {
+            params.add("-TransactionIsolationLevel");
+            params.add(transactionIsolationLevel.name());
+        }
+
+        if (StringUtils.isNotEmpty(filter)) {
+            params.add("-filter");
+            params.add(getFilter());
+        }
+
+        if ("sqlServer".equals(getTempServer())) {
+            params.add("-temporaryDatabaseServer");
+            params.add(getServerName());
+            if (StringUtils.isNotEmpty(getDbName())) {
+                params.add("-temporaryDatabaseName");
+                params.add(getDbName());
+            }
+
+
+            if ("sqlServerAuth".equals(getServerAuth())) {
+                params.add("-temporaryDatabaseUserName");
+                params.add(getUsername());
+                params.add("-temporaryDatabasePassword");
+                params.add(getPassword().getPlainText());
+            }
+
+            if (encryptConnection) {
+                params.add("-temporaryDatabaseEncryptConnection");
+            }
+
+            if (trustServerCertificate) {
+                params.add("-temporaryDatabaseTrustServerCertificate");
             }
         }
 
-        return Utils.runSQLCIWithParams(build, launcher, listener, params);
+        if (getSendToDlmDashboard()) {
+            params.add("-dlmDashboardHost");
+            params.add(getDlmDashboardHost());
+            params.add("-dlmDashboardPort");
+            params.add(getDlmDashboardPort());
+        }
+
+        addProductVersionParameter(params, sqlChangeAutomationVersionOption);
+
+        return runSqlContinuousIntegrationCmdlet(build, launcher, listener, params);
     }
 
+    private void addProjectOptionParams(final Collection<String> params, final FilePath checkOutPath) {
+        params.add("-scriptsFolder");
+
+        switch (dbFolder) {
+            case scaproject:
+                final Path projectPath = Paths.get(checkOutPath.getRemote(), this.projectPath);
+                params.add(projectPath.toString());
+                break;
+            case vcsroot:
+                params.add(checkOutPath.getRemote());
+                break;
+            case subfolder:
+                final Path subfolderPath = Paths.get(checkOutPath.getRemote(), subfolder);
+                params.add(subfolderPath.toString());
+                break;
+        }
+    }
+
+    private static String getEscapedOptions(final String options) {
+        if (options.trim().startsWith("-")) {
+            final StringBuilder sb = new StringBuilder(options);
+            return sb.insert(0, ',').toString();
+        }
+        return options;
+    }
 
     // Overridden for better type safety.
     // If your plugin doesn't really define any property on Descriptor,
     // you don't have to do this.
     @Override
     public DescriptorImpl getDescriptor() {
-        return (DescriptorImpl)super.getDescriptor();
+        return (DescriptorImpl) super.getDescriptor();
     }
 
     /**
@@ -144,23 +335,33 @@ public class BuildBuilder extends Builder {
     @Extension // This indicates to Jenkins that this is an implementation of an extension point.
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
         /**
-         * In order to load the persisted global configuration, you have to 
+         * In order to load the persisted global configuration, you have to
          * call load() in the constructor.
          */
         public DescriptorImpl() {
             load();
         }
 
-        public FormValidation doCheckPackageid(@QueryParameter String value) throws IOException, ServletException {
-            if (value.length() == 0)
+        public FormValidation doCheckPackageid(@QueryParameter final String value) {
+            if (StringUtils.isEmpty(value)) {
                 return FormValidation.error("Enter a package ID.");
+            }
             return FormValidation.ok();
+        }
+
+        public ListBoxModel doFillTransactionIsolationLevelItems() {
+            return Arrays.stream(TransactionIsolationLevel.values())
+                         .map(transactionIsolationLevel ->
+                                  new ListBoxModel.Option(
+                                      transactionIsolationLevel.getDisplayName(),
+                                      transactionIsolationLevel.name()))
+                         .collect(Collectors.toCollection(ListBoxModel::new));
         }
 
         // Since the AJAX callbacks don't give the value of radioblocks, I can't validate the value of the server and
         // database name fields.
 
-        public boolean isApplicable(Class<? extends AbstractProject> aClass) {
+        public boolean isApplicable(final Class<? extends AbstractProject> aClass) {
             // Indicates that this builder can be used with all kinds of project types 
             return true;
         }
@@ -169,15 +370,15 @@ public class BuildBuilder extends Builder {
          * This human readable name is used in the configuration screen.
          */
         public String getDisplayName() {
-            return "Redgate SQL CI: Build a database package";
+            return "Redgate SQL Change Automation: Build a database package";
         }
 
         @Override
-        public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
+        public boolean configure(final StaplerRequest req, final JSONObject formData) throws FormException {
             // To persist global configuration information,
             // set that to properties and call save().
             save();
-            return super.configure(req,formData);
+            return super.configure(req, formData);
         }
     }
 }

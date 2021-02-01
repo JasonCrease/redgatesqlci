@@ -10,15 +10,31 @@
     }
   </style>
 
-  <f:section title="Database package to test">
-    <f:block><span class="tip">Enter the ID of the package that you want to test. The ID must be for a package built by Red Gate SQL CI.</span></f:block>
-    <f:entry title="Package ID:" field="packageid">
-      <f:textbox/>
-    </f:entry>
+  <f:section title="Test source">
+    <f:block><span class="tip">Specify the type of database project you wish to test.</span></f:block>
+    <f:radioBlock name="testSource" title="Test a SQL Change Automation project using tSQLt tests" value="scaproject" checked="${instance.testSource == null || instance.testSource == 'scaproject'}">
+      <f:nested>
+        <f:entry title="Project path:" field="projectPath">
+          <f:textbox/>
+        </f:entry>
+      </f:nested>
+    </f:radioBlock>
+    <f:radioBlock name="testSource" title="Test a build artifact from a SQL Source Control project using tSQLt tests" value="socartifact" checked="${!(instance.testSource == null || instance.testSource == 'scaproject')}">
+      <f:nested>
+        <f:entry title="NuGet package ID:" field="packageid">
+          <f:textbox/>
+        </f:entry>
+        <f:advanced>
+          <f:entry title="Override package version:" field="packageVersion">
+            <f:textbox/>
+          </f:entry>
+        </f:advanced>
+      </f:nested>
+    </f:radioBlock>
   </f:section>
 
   <f:section title="Temporary database server">
-    <f:block><span class="tip">Red Gate SQL CI will recreate and validate your database on a temporary server before testing it.</span></f:block>
+    <f:block><span class="tip">Redgate SQL Change Automation will recreate and validate your database on a temporary server before testing it.</span></f:block>
     <f:radioBlock name="tempServer" title="SQL LocalDB (recommended)" value="localdb" checked="${instance.tempServer == null || instance.tempServer == 'localdb'}"/>
     <f:radioBlock name="tempServer" title="SQL Server" value="sqlServer"  checked="${!(instance.tempServer == null || instance.tempServer == 'localdb')}">
       <f:nested>
@@ -39,15 +55,21 @@
             </f:entry>
           </f:nested>
         </f:radioBlock>
+        <f:entry title="Encrypt:" field="encryptConnection">
+          <f:checkbox checked="${instance.encryptConnection}"/>
+        </f:entry>
+        <f:entry title="Trust Server Certificate:" field="trustServerCertificate">
+          <f:checkbox checked="${instance.trustServerCertificate}"/>
+        </f:entry>
       </f:nested>
     </f:radioBlock>
   </f:section>
 
   <f:section title="Run tests">
     <f:radioBlock name="runTestSet" title="Run every test" value="runEveryTest" checked="${instance.runTestSet == null || instance.runTestSet == 'runEveryTest'}"/>
-    <f:radioBlock name="runTestSet" title="Run only:" value="runOnlyTest" checked="${!(instance.runTestSet == null || instance.runTestSet == 'runEveryTest')}">
+    <f:radioBlock name="runTestSet" title="Run selected tests only" value="runOnlyTest" checked="${!(instance.runTestSet == null || instance.runTestSet == 'runEveryTest')}">
       <f:nested>
-        <f:entry title="" field="runOnlyParams">
+        <f:entry title="Tests to be run:" field="runOnlyParams">
           <f:textbox/>
         </f:entry>
         <f:block>
@@ -61,28 +83,40 @@
   <f:section title="Generate test data">
     <f:optionalBlock title="Generate test data" field="generateTestData" checked="${instance.generateTestData != null}">
       <f:nested>
-        <f:entry title="SQL Data Generator project file" field="sqlgenPath">
+        <f:entry title="SQL Data Generator project file:" field="sqlgenPath">
           <f:textbox/>
         </f:entry>
         <f:block>
-          <span class="tip">Enter the path of a SQL Data Generator project (.sqlgen) file. The path must be relative to the VCS root.
+          <span class="tip">Optional. If you already have a SQL Data Generator project file (.sqlgen) you wish you use, include the path and filename here. The path must be relative to the VCS root.
           </span>
         </f:block>
       </f:nested>
     </f:optionalBlock>
   </f:section>
 
-  <f:section title="Advanced Options">
+  <f:section title="SQL Source Control project options">
     <f:block>
-      <f:block>
-        <span class="tip">Specify SQL Compare switches to run on the command line.</span>
-        <a href="http://www.red-gate.com/teamcityplugin/help/clsyntax" target="_blank" style="margin-left:20px;margin-right:20px;">Syntax</a>
-        <a href="http://www.red-gate.com/teamcityplugin/help/clexamples" target="_blank">Examples</a>
-      </f:block>
-      <f:entry title="Additional parameters:" field="additionalParams">
-        <f:textbox/>
+      <f:entry title="SQL Compare options:" field="options">
+          <f:textbox/>
+      </f:entry>
+      <f:entry title="SQL Data Compare options:" field="dataOptions">
+          <f:textbox/>
+      </f:entry>
+      <f:entry title="SQL Compare filter:" field="filter">
+          <f:textbox/>
       </f:entry>
     </f:block>
+  </f:section>
+
+  <f:section title="SQL Change Automation version" >
+    <f:radioBlock name="sqlChangeAutomationVersionOption" title="Latest" value="Latest" checked="${instance.getSqlChangeAutomationVersionOption() == null || instance.getSqlChangeAutomationVersionOption().getOption().name().equals('Latest')}" />
+    <f:radioBlock name="sqlChangeAutomationVersionOption" title="Specific" value="Specific" checked="${!(instance.getSqlChangeAutomationVersionOption() == null || instance.getSqlChangeAutomationVersionOption().getOption().name().equals('Latest'))}">
+      <f:nested>
+        <f:entry title="Specific version of SQL Change Automation to be used:" field="specificVersion">
+          <f:textbox value="${instance.getSqlChangeAutomationVersionOption().getSpecificVersion()}"/>
+        </f:entry>
+      </f:nested>
+    </f:radioBlock>
   </f:section>
 
 </j:jelly>
