@@ -1,10 +1,15 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 
-  <f:section title="Package to publish">
-    <f:entry title="Package ID:" field="packageid">
+  <f:section title="Build artifact to publish">
+    <f:entry title="NuGet Package ID:" field="packageid">
       <f:textbox/>
     </f:entry>
+    <f:advanced>
+      <f:entry title="Override package version:" field="packageVersion">
+        <f:textbox/>
+      </f:entry>
+    </f:advanced>
   </f:section>
 
   <f:section title="NuGet Feed">
@@ -12,9 +17,19 @@
       <f:textbox/>
     </f:entry>
     <f:entry title="NuGet Feed API Key:" field="nugetFeedApiKey">
-      <f:textbox/>
+      <f:password/>
     </f:entry>
   </f:section>
 
+  <f:section title="SQL Change Automation version" >
+    <f:radioBlock name="sqlChangeAutomationVersionOption" title="Latest" value="Latest" checked="${instance.getSqlChangeAutomationVersionOption() == null || instance.getSqlChangeAutomationVersionOption().getOption().name().equals('Latest')}" />
+    <f:radioBlock name="sqlChangeAutomationVersionOption" title="Specific" value="Specific" checked="${!(instance.getSqlChangeAutomationVersionOption() == null || instance.getSqlChangeAutomationVersionOption().getOption().name().equals('Latest'))}">
+      <f:nested>
+        <f:entry title="Specific version of SQL Change Automation to be used:" field="specificVersion">
+          <f:textbox value="${instance.getSqlChangeAutomationVersionOption().getSpecificVersion()}"/>
+        </f:entry>
+      </f:nested>
+    </f:radioBlock>
+  </f:section>
 
 </j:jelly>

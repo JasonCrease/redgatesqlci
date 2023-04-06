@@ -8,51 +8,95 @@ import hudson.model.BuildListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
+import hudson.util.Secret;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import javax.servlet.ServletException;
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 
-public class PublishBuilder extends Builder {
+@SuppressWarnings({"WeakerAccess", "InstanceVariableOfConcreteClass", "unused"})
+public class PublishBuilder extends SqlContinuousIntegrationBuilder {
 
     private final String packageid;
-    public String getPackageid() { return packageid; }
 
-    private final String nugetFeedUrl;
-    public String getNugetFeedUrl() { return nugetFeedUrl;  }
-
-    private final String nugetFeedApiKey;
-    public String getNugetFeedApiKey() {
-        return nugetFeedApiKey;
+    public String getPackageid() {
+        return packageid;
     }
 
+    private final String nugetFeedUrl;
 
-    @DataBoundConstructor
-    public PublishBuilder(String packageid, String nugetFeedUrl, String nugetFeedApiKey) {
-        this.packageid = packageid;
-        this.nugetFeedUrl = nugetFeedUrl;
+    public String getNugetFeedUrl() {
+        return nugetFeedUrl;
+    }
+
+    private Secret nugetFeedApiKey;
+
+    public void setNugetFeedApiKey(Secret nugetFeedApiKey) { 
         this.nugetFeedApiKey = nugetFeedApiKey;
     }
 
+    public Secret getNugetFeedApiKey() {
+        return nugetFeedApiKey;
+    }
+
+    private final String packageVersion;
+
+    public String getPackageVersion() {
+        return packageVersion;
+    }
+
+    private final SqlChangeAutomationVersionOption sqlChangeAutomationVersionOption;
+
+    public SqlChangeAutomationVersionOption getSqlChangeAutomationVersionOption() {
+        return sqlChangeAutomationVersionOption;
+    }
+
+    @DataBoundConstructor
+    public PublishBuilder(
+        final String packageid,
+        final String nugetFeedUrl,
+        final Secret nugetFeedApiKey,
+        final String packageVersion,
+        final SqlChangeAutomationVersionOption sqlChangeAutomationVersionOption) {
+        this.packageid = packageid;
+        this.nugetFeedUrl = nugetFeedUrl;
+        this.nugetFeedApiKey = nugetFeedApiKey;
+        this.packageVersion = packageVersion;
+        this.sqlChangeAutomationVersionOption = sqlChangeAutomationVersionOption;
+    }
+
     @Override
-    public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
-        ArrayList<String> params = new ArrayList<String>();
+    public boolean perform(final AbstractBuild build, final Launcher launcher, final BuildListener listener) {
+        final Collection<String> params = new ArrayList<>();
 
-        String packageFileName = Utils.constructPackageFileName(getPackageid(), build.getNumber());
-
-        params.add("PUBLISH");
-        params.add("/package=" + packageFileName);
-        params.add("/nugetFeedUrl=" + getNugetFeedUrl());
-
-        if (!getNugetFeedApiKey().isEmpty()) {
-            params.add("/nugetFeedApiKey=" + getNugetFeedApiKey());
+        String buildNumber = "1.0." + Integer.toString(build.getNumber());
+        if (StringUtils.isNotEmpty(getPackageVersion())) {
+            buildNumber = getPackageVersion();
         }
 
-        return Utils.runSQLCIWithParams(build, launcher, listener, params);
+        final String packageFileName = SqlContinuousIntegrationBuilder.constructPackageFileName(
+            getPackageid(),
+            buildNumber);
+
+        params.add("Publish");
+        params.add("-package");
+        params.add(packageFileName);
+        params.add("-nugetFeedUrl");
+        params.add(getNugetFeedUrl());
+
+        final String nugetKey = getNugetFeedApiKey().getPlainText();
+        if (StringUtils.isNotEmpty(nugetKey)) {
+            params.add("-nugetFeedApiKey");
+            params.add(nugetKey);
+        }
+
+        addProductVersionParameter(params, sqlChangeAutomationVersionOption);
+
+        return runSqlContinuousIntegrationCmdlet(build, launcher, listener, params);
     }
 
 
@@ -61,7 +105,7 @@ public class PublishBuilder extends Builder {
     // you don't have to do this.
     @Override
     public DescriptorImpl getDescriptor() {
-        return (DescriptorImpl)super.getDescriptor();
+        return (DescriptorImpl) super.getDescriptor();
     }
 
     /**
@@ -78,19 +122,22 @@ public class PublishBuilder extends Builder {
             load();
         }
 
-        public FormValidation doCheckPackageid(@QueryParameter String value) throws IOException, ServletException {
-            if (value.length() == 0)
+        public FormValidation doCheckPackageid(@QueryParameter final String value) {
+            if (StringUtils.isEmpty(value)) {
                 return FormValidation.error("Enter a package ID");
+            }
             return FormValidation.ok();
         }
 
-        public FormValidation doCheckNugetFeedUrl(@QueryParameter String nugetFeedUrl) throws IOException, ServletException {
-            if (nugetFeedUrl.length() == 0)
+        public FormValidation doCheckNugetFeedUrl(
+            @QueryParameter final String nugetFeedUrl) {
+            if (StringUtils.isEmpty(nugetFeedUrl)) {
                 return FormValidation.error("Enter a NuGet package feed URL");
+            }
             return FormValidation.ok();
         }
 
-        public boolean isApplicable(Class<? extends AbstractProject> aClass) {
+        public boolean isApplicable(final Class<? extends AbstractProject> aClass) {
             // Indicates that this builder can be used with all kinds of project types
             return true;
         }
@@ -99,15 +146,15 @@ public class PublishBuilder extends Builder {
          * This human readable name is used in the configuration screen.
          */
         public String getDisplayName() {
-            return "Redgate SQL CI: Publish a database package";
+            return "Redgate SQL Change Automation: Publish a database package";
         }
 
         @Override
-        public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
+        public boolean configure(final StaplerRequest req, final JSONObject formData) throws FormException {
             // To persist global configuration information,
             // set that to properties and call save().
             save();
-            return super.configure(req,formData);
+            return super.configure(req, formData);
         }
     }
 }
